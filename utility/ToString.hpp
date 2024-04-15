@@ -4,7 +4,7 @@
 
 namespace Plotter
 {
-	static inline std::streamsize DEFAULT_PRECISION	{ 1 };
+	static inline std::streamsize DEFAULT_PRECISION	{ 2 };
 
 	std::string toString(float value, std::streamsize precision = DEFAULT_PRECISION);
 }
