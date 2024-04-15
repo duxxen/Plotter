@@ -7,8 +7,10 @@
 
 namespace Plotter
 {
-	static inline uint32_t	DEFAULT_WIN_WIDTH		{ 360 };
-	static inline uint32_t	DEFAULT_WIN_HEIGHT		{ 240 };
+#define AUTO 1
+
+	static inline uint32_t	DEFAULT_WIN_WIDTH		{ 640 };
+	static inline uint32_t	DEFAULT_WIN_HEIGHT		{ 480 };
 	static inline uint32_t	DEFAULT_WIN_INDENT		{ 10 };
 	static inline uint32_t	DEFAULT_TEXT_INDENT		{ 10 };
 	static inline uint32_t	DEFAULT_POINT_COUNT		{ 4000 };
