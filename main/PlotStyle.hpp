@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.hpp"
-#include "assets/AssetManager.hpp"
+#include "../assets/AssetManager.hpp"
 
 namespace Plotter
 {
@@ -10,6 +10,12 @@ namespace Plotter
 		uint32_t	width		{ DEFAULT_WIN_WIDTH  };		
 		uint32_t	height		{ DEFAULT_WIN_HEIGHT };
 		uint32_t	indent		{ DEFAULT_WIN_INDENT };
+
+		// Cursor color
+		uint8_t		cColorR{ 128 };
+		uint8_t		cColorG{ 128 };
+		uint8_t		cColorB{ 128 };
+		uint8_t		cColorA{ 255 };
 
 		// Grid color
 		uint8_t		gColorR		{ 64 };
@@ -35,15 +41,15 @@ namespace Plotter
 		uint8_t		bColorB		{ 0 };
 		uint8_t		bColorA		{ 255 };
 
-		// Grid count
-		uint32_t	gCountX		{ 10 };
-		uint32_t	gCountY		{ 10 };
-
 		// Text color
 		uint8_t		tColorR		{ 255 };
 		uint8_t		tColorG		{ 255 };
 		uint8_t		tColorB		{ 255 };
 		uint8_t		tColorA		{ 255 };
+
+		// Grid count
+		uint32_t	gCountX{ 10 };
+		uint32_t	gCountY{ 10 };
 
 		// Text properties
 		std::string	fontPath	{ "src/assets/arial.ttf" };
@@ -54,7 +60,8 @@ namespace Plotter
 		bool		showGrid	{ true };
 		bool		showAxis	{ true };
 		bool		showVolume	{ true };
-		bool		centerAxis	{ true };
+		bool		showCursor	{ true };
+		bool		centerAxis	{ false };
 
 		uint32_t	pointCount	{ DEFAULT_POINT_COUNT };
 		
