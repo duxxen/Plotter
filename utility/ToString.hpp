@@ -4,13 +4,14 @@
 
 namespace Plotter
 {
-	static inline std::streamsize DEFAULT_PRECISION	{ 2 };
+	static inline std::streamsize DEFAULT_PRECISION	{ 3 };
 
 	std::string toString(float value, std::streamsize precision = DEFAULT_PRECISION);
 }
 
 inline std::string Plotter::toString(float value, std::streamsize precision)
 {
+	//value = round(value * 100000) / 1000000;
 	std::stringstream ss;
 	std::string str;
 	ss.precision(precision);
