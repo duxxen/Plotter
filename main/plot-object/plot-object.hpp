@@ -23,4 +23,4 @@ namespace Plotter
 #include "cursor/cursor.h"
 #include "graph/graph.h"
 #include "grid/grid.h"
-#include "title/title.h"
+#include "titles/titles.h"

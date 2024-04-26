@@ -1,7 +1,7 @@
 #pragma once
 #include "../common.hpp"
 
-#define DEFAULT_STYLE 0
+#define STYLE_DEFAULT 0
 
 namespace Plotter
 {
@@ -16,3 +16,10 @@ namespace Plotter
 		}
 	};
 }
+
+#include "axis-style.hpp"
+#include "cursor-style.hpp"
+#include "graph-style.hpp"
+#include "grid-style.hpp"
+#include "plot-style.hpp"
+#include "text-style.hpp"

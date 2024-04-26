@@ -4,7 +4,7 @@
 
 namespace Plotter
 {
-	class Title : public PlotObject
+	class Titles : public PlotObject
 	{
 		friend class Axis;
 		friend class Cursor;
@@ -12,9 +12,13 @@ namespace Plotter
 		friend class Plot;
 
 	public:
-		Title(Plot* layout, TextStyle style);
+		Titles(Plot* layout, TextStyle style);
 
 	private:
-		TextStyle	style;	
+
+		void recompute() override;
+		void onStyleChanged() override;
+
+		TextStyle	style;
 	};
 }

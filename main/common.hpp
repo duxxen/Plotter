@@ -14,6 +14,8 @@ namespace Plotter
 
 	typedef Vec2					Coords;
 	typedef Vec2					Values;
+	typedef Rect					RectCoords;
+	typedef Rect					RectValues;
 	typedef function<float(float)>	Func;
 
 	static inline uint32_t	DEFAULT_WIN_WIDTH		{ 640 };
