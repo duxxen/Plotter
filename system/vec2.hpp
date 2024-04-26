@@ -7,6 +7,9 @@ namespace System
 		Vec2();
 		Vec2(float x, float y);
 
+		float abs() const;
+		Vec2 normalized() const;
+
 		float x;
 		float y;
 	};
@@ -21,6 +24,17 @@ namespace System
 		x{ x },
 		y{ y }
 	{
+	}
+
+	inline float Vec2::abs() const
+	{
+		return sqrt(x * x + y * y);
+	}
+
+	inline Vec2 Vec2::normalized() const
+	{
+		auto a = abs();
+		return Vec2(x / a, y / a);
 	}
 
 }
