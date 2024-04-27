@@ -1,4 +1,3 @@
-
 #pragma once
 #include "../plot-object.hpp"
 #include "../../style/graph-style.hpp"
@@ -8,6 +7,7 @@ namespace Plotter
 	class Graph : public PlotObject
 	{
 		friend class Plot;
+		friend void render();
 	public:
 
 		Graph(Plot* layout);

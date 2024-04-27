@@ -26,7 +26,11 @@ namespace System
 		void append(Vertex vertex);
 		void resize(size_t size);
 
+		PrimitiveType getType() const;
+		size_t getSize() const;
+
 		Vertex& operator[] (int i);
+		const Vertex& operator[] (int i) const;
 
 	private:
 
@@ -99,7 +103,22 @@ namespace System
 		this->size = size;
 	}
 
+	inline PrimitiveType Vertices::getType() const
+	{
+		return primitiveType;
+	}
+
+	inline size_t Vertices::getSize() const
+	{
+		return size;
+	}
+
 	inline Vertex& Vertices::operator[](int i)
+	{
+		return vertexArray[i];
+	}
+
+	inline const Vertex& Vertices::operator[](int i) const
 	{
 		return vertexArray[i];
 	}

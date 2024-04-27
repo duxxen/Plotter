@@ -10,6 +10,8 @@ namespace Plotter
 		friend class Cursor;
 		friend class Grid;
 		friend class Plot;
+		friend void init(Plot*);
+		friend void render();
 
 	public:
 		Titles(Plot* layout, TextStyle style);
@@ -19,6 +21,13 @@ namespace Plotter
 		void recompute() override;
 		void onStyleChanged() override;
 
-		TextStyle	style;
+		TextStyle		style;
+
+		// Grid-Axis Values
+		vector<Text>	valuesX;
+		vector<Text>	valuesY;
+
+		// Cursor Values
+		vector<Text>	valuesC;
 	};
 }

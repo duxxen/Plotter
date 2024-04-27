@@ -7,6 +7,7 @@ namespace Plotter
 	class Grid : public PlotObject
 	{
 		friend class Plot;
+		friend void render();
 	public:
 
 		Grid(Plot* layout, GridStyle style);

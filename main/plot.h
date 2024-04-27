@@ -1,6 +1,5 @@
 #pragma once
-#include "style/plot-style.hpp"
-#include "plot-object/plot-object.hpp"
+#include "../config/config.hpp"
 
 namespace Plotter
 {
@@ -11,6 +10,14 @@ namespace Plotter
 		friend class Graph;
 		friend class Grid;
 		friend class Title;
+
+		friend void init(Plot*);
+		friend void shutdown(Plot*);
+		friend void shutdown();
+
+		friend void proccessEvents();
+		friend void update();
+		friend void render();
 
 	public:
 		Plot(std::string name = "Plot",
@@ -50,8 +57,9 @@ namespace Plotter
 		void plot(vector<Vec2> points, GraphStyle style);				// Builds	[new] Plot	 (Style: style)		
 		void plot(size_t index, vector<Vec2> points, GraphStyle style);	// Rebuilds	[index] Plot (Style: style)		<- main
 
-		// Update function which must be called from loop
-		void update();
+		//----------------- GETTERS ------------------------------------------------------------------------------------------
+
+		PlotStyle getPlotStyle();
 
 	private:
 
@@ -68,27 +76,41 @@ namespace Plotter
 		Coords range(float cx, float cy) const;
 		Coords range(Coords coord) const;
 
+		//----------------- USER INPUT CALLBACKS --------------------------------------------------------------------------------------
+
+		void onMouseMoved(float x, float y);
+		void onMousePressed(Mouse::Button button);
+		void onMouseReleased(Mouse::Button button);
+
+		void onKeyPressed(Keyboard::Key key);
+		void onKeyReleased(Keyboard::Key key);
+
 		//----------------- PLOT VARIABLES ----------------------------------------------------------------------------------------
 
 		// Style
-		PlotStyle	style;
-
+		PlotStyle		style;
+	
 		// Transforms
-		RectCoords	bounds;
-		Values		scale;
-
+		RectCoords		bounds;
+		Values			scale;
+	
 		// Graph Variables
-		Values		start;
-		Values		end;
-		bool		yAuto;
+		Values			start;
+		Values			end;
+		bool			yAuto;
 
 		// Plot objects
-		Axis		axis;
-		Cursor		mouseCursor;
-		Cursor		leftCursor;
-		Cursor		rightCursor;
+		Axis			axis;
+		Cursor			mCursor;
+		Cursor			lCursor;
+		Cursor			rCursor;
+		Grid			grid;
+		vector<Graph>	graphs;
+		Titles			titles;
 
+		// User Input
+		Mouse			mouse;
+		Keyboard		keyboard;
 
-		
 	};
 }

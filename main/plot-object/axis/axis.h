@@ -7,6 +7,7 @@ namespace Plotter
 	class Axis : public PlotObject
 	{
 		friend class Plot;
+		friend void render();
 	public:
 
 		Axis(Plot* layout, AxisStyle style);
@@ -17,9 +18,9 @@ namespace Plotter
 		void onStyleChanged() override;
 
 		// Style
-		AxisStyle	style;
+		AxisStyle		style;
 
 		// Render Objects
-		Vertex		lines;
+		Vertex			lines;
 	};
 }

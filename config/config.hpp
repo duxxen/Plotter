@@ -1,11 +1,8 @@
 #pragma once
-#include <assert.h>
-#include <functional>
-#include <vector>
-#include <thread>
-#include <mutex>
-
-#include "../utility/tostring.hpp"
+#include "../system/system.hpp"
+#include "../main/common.hpp"
+#include "../main/style/style.hpp"
+#include "../main/plot-object/plot-object.hpp"
 
 // using SFML config (only SFML implemented)
-#include "SFML-config.hpp";
+#include "sfml-config/SFML-config.hpp"
