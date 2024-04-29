@@ -21,6 +21,6 @@ namespace Plotter
 		AxisStyle		style;
 
 		// Render Objects
-		Vertex			lines;
+		Vertices		lines;
 	};
 }

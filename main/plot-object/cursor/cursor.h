@@ -21,6 +21,8 @@ namespace Plotter
 		void recompute() override;
 		void onStyleChanged() override;
 
+		CursorStyle	style;
+
 		Values		position;
 		Vertices	lines;
 	};
