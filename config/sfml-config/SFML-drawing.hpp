@@ -6,6 +6,9 @@ namespace Plotter
 {
 	class Engine
 	{
+		friend void plotTitleChanged();
+		friend void fontChanged();
+
 		friend void init(Plot* plot);
 		friend void shutdown(Plot* plot);
 		friend void shutdown();
@@ -17,6 +20,15 @@ namespace Plotter
 		static inline std::map<Plot*, sf::RenderWindow*> plots;
 		static inline sf::Font							 font;
 	};
+
+	void plotTitleChanged()
+	{
+
+	}
+
+	void fontChanged()
+	{
+	}
 
 	void init(Plot* plot) {
 		auto& style = plot->style;
@@ -112,15 +124,20 @@ namespace Plotter
 					window.draw(toVertexArray(graph.vTriangles));
 			}
 
-			if (plot.style.show & PlotStyle::SHOW_CURSOR)
+			for (auto i = MOUSE_CURSOR; i <= RIGHT_CURSOR; i++)
 			{
-				window.draw(toVertexArray(plot.mCursor.lines));
-
-				sf::Text text(plot.titles.valuesC[MOUSE_CURSOR].string, Engine::font, plot.titles.style.charSize);
-				text.setFillColor(toSfColor(plot.titles.style.color));
-				text.setPosition(toVector2<float>(plot.titles.valuesC[MOUSE_CURSOR].position));
-				window.draw(text);
+				if (plot.cursores[i].style.show & CursorStyle::SHOW_LINES)
+					window.draw(toVertexArray(plot.cursores[MOUSE_CURSOR].lines));
+				if (plot.cursores[i].style.show & CursorStyle::SHOW_TITLE)
+				{
+					sf::Text text(plot.titles.valuesC[MOUSE_CURSOR].string, Engine::font, plot.titles.style.charSize);
+					text.setFillColor(toSfColor(plot.titles.style.color));
+					text.setPosition(toVector2<float>(plot.titles.valuesC[MOUSE_CURSOR].position));
+					window.draw(text);
+				}
 			}
+
+			if (plot.cursores[LEFT_CURSOR].style.show & CursorStyle::SHOW_LINES)
 
 			if (plot.style.show & PlotStyle::SHOW_AXIS)
 			{

@@ -30,6 +30,7 @@ namespace Plotter
 	{
 		OK,
 		INVALID_SIZE,
+		INVALID_INDEX,
 		INVALID_RESULT
 	};
 }

@@ -9,14 +9,14 @@ namespace System
 		Rect(Vec2 position, Vec2 size);
 		Rect(float left, float top, float width, float height);
 
-		Vec2 position();
-		Vec2 size();
+		Vec2 position() const;
+		Vec2 size() const;
 
-		float right();
-		float bottom();
+		float right() const;
+		float bottom() const;
 
-		Vec2 center();
-		Vec2 rightBottom();
+		Vec2 center() const;
+		Vec2 rightBottom() const;
 
 		float left	{ 0 };
 		float top	{ 0 };
@@ -44,32 +44,32 @@ namespace System
 	{
 	}
 
-	inline Vec2 Rect::position()
+	inline Vec2 Rect::position() const
 	{
 		return Vec2(left, top);
 	}
 
-	inline Vec2 Rect::size()
+	inline Vec2 Rect::size() const
 	{
 		return Vec2(width, height);
 	}
 
-	inline float Rect::right()
+	inline float Rect::right() const
 	{
 		return left + width;
 	}
 
-	inline float Rect::bottom()
+	inline float Rect::bottom() const
 	{
 		return top + height;
 	}
 
-	inline Vec2 Rect::center()
+	inline Vec2 Rect::center() const
 	{
 		return Vec2(left + width / 2, top + height / 2);
 	}
 
-	inline Vec2 Rect::rightBottom()
+	inline Vec2 Rect::rightBottom() const
 	{
 		return Vec2(right(), bottom());
 	}

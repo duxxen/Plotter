@@ -11,6 +11,7 @@ namespace Plotter
 
     void Titles::recompute()
     {
+
     }
 
     void Titles::onStyleChanged()

@@ -12,6 +12,7 @@ namespace Plotter
 		friend class Plot;
 		friend void init(Plot*);
 		friend void render();
+		friend void fontChanged();
 
 	public:
 		Titles(Plot* layout, TextStyle style);

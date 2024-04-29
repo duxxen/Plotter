@@ -11,6 +11,8 @@ namespace Plotter
 		friend class Grid;
 		friend class Title;
 
+		friend void plotTitleChanged();
+
 		friend void init(Plot*);
 		friend void shutdown(Plot*);
 		friend void shutdown();
@@ -38,24 +40,25 @@ namespace Plotter
 		//----------------- STYLES SETTERS -----------------------------------------------------------------------------------------------
 
 		void setStyle(PlotStyle style);
+		void setStyle(AxisStyle style);
+		void setStyle(size_t index, CursorStyle style);
 		void setStyle(size_t index, GraphStyle style);
 		void setStyle(GridStyle style);
-		void setStyle(AxisStyle style);
 		void setStyle(TextStyle style);
-		void setStyle(CursorStyle style);
+		
 
 		//----------------- BUILD PLOT FUNCTION ------------------------------------------------------------------------------------------
 		// Graph of Function
-		void plot(Func func);											// Builds	[new] Plot   (Style: AUTO)	
-		void plot(size_t index, Func func);								// Rebuilds [index] Plot (Style: AUTO)
-		void plot(Func func, GraphStyle style);							// Builds	[new] Plot	 (Style: style)		
-		void plot(size_t index, Func func, GraphStyle style);			// Rebuilds	[index] Plot (Style: style)		<- main
+		void plot(Func func);												// Builds	[new] Plot   (Style: AUTO)	
+		void plot(size_t index, Func func);									// Rebuilds [index] Plot (Style: AUTO)
+		void plot(Func func, GraphStyle style);								// Builds	[new] Plot	 (Style: style)		
+		void plot(size_t index, Func func, GraphStyle style);				// Rebuilds	[index] Plot (Style: style)		<- main
 
 		// Graph of Points
-		void plot(vector<Vec2> points);									// Builds	[new] Plot   (Style: AUTO)	
-		void plot(size_t index, vector<Vec2> points);					// Rebuilds [index] Plot (Style: AUTO)
-		void plot(vector<Vec2> points, GraphStyle style);				// Builds	[new] Plot	 (Style: style)		
-		void plot(size_t index, vector<Vec2> points, GraphStyle style);	// Rebuilds	[index] Plot (Style: style)		<- main
+		void plot(vector<Values> points);									// Builds	[new] Plot   (Style: AUTO)	
+		void plot(size_t index, vector<Values> points);						// Rebuilds [index] Plot (Style: AUTO)
+		void plot(vector<Values> points, GraphStyle style);					// Builds	[new] Plot	 (Style: style)		
+		void plot(size_t index, vector<Values> points, GraphStyle style);	// Rebuilds	[index] Plot (Style: style)		<- main
 
 	private:
 
@@ -102,9 +105,7 @@ namespace Plotter
 
 		// Plot objects
 		Axis			axis;
-		Cursor			mCursor;
-		Cursor			lCursor;
-		Cursor			rCursor;
+		vector<Cursor>	cursores;
 		Grid			grid;
 		vector<Graph>	graphs;
 		Titles			titles;
