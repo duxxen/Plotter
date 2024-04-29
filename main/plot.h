@@ -57,10 +57,6 @@ namespace Plotter
 		void plot(vector<Vec2> points, GraphStyle style);				// Builds	[new] Plot	 (Style: style)		
 		void plot(size_t index, vector<Vec2> points, GraphStyle style);	// Rebuilds	[index] Plot (Style: style)		<- main
 
-		//----------------- GETTERS ------------------------------------------------------------------------------------------
-
-		PlotStyle getPlotStyle();
-
 	private:
 
 		//----------------- TRANSFORM FUNCTIONS ---------------------------------------------------------------------------------------
@@ -75,6 +71,11 @@ namespace Plotter
 
 		Coords range(float cx, float cy) const;
 		Coords range(Coords coord) const;
+
+		//----------------- RECOMPUTE FUNCTIONS ---------------------------------------------------------------------------------------
+
+		void rebuild();
+		void recompute();
 
 		//----------------- USER INPUT CALLBACKS --------------------------------------------------------------------------------------
 
