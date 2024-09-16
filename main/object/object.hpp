@@ -24,7 +24,7 @@ namespace Plotter
 
 	private:
 
-		virtual void onStyleChanged() = 0;
+		virtual void init() = 0;
 		virtual void recompute() = 0;
 	};
 }

@@ -7,17 +7,13 @@ namespace Plotter
 	Plot::PlotStyle::PlotStyle(
 		string windowName, 
 		Coords windowSize, 
-		Color backgroundColor, 
-		Coords frameSize, 
-		Coords framePosition, 
+		Color backgroundColor,
 		Color frameColor, 
 		uint32_t pointCount) 
 		:
 		windowName(windowName),
 		windowSize(windowSize),
 		backgroundColor(backgroundColor),
-		frameSize(frameSize),
-		framePosition(framePosition),
 		frameColor(frameColor),
 		pointCount(pointCount)
 	{
@@ -27,100 +23,142 @@ namespace Plotter
 		PlotStyle pstyle, 
 		Axis::AxisStyle astyle,
 		Grid::GridStyle gstyle,
-		Graph::GraphStyle lstyle, 
 		Cursor::CursorStyle cstyle,
 		Title::TitleStyle tstyle)
 		:
 		Object	{ nullptr },
 		axis	{ this, astyle },
 		grid	{ this, gstyle, tstyle },
-		graph	{ this, lstyle },
-		cursor	{ this, cstyle, tstyle }
+		cursor	{ this, cstyle, tstyle },
+		style	{ pstyle }
 	{
 		init();
 	}
 
-	void Plot::init(
-		PlotStyle pstyle, 
-		Axis::AxisStyle astyle,
-		Grid::GridStyle gstyle,
-		Graph::GraphStyle lstyle,
-		Cursor::CursorStyle cstyle,
-		Title::TitleStyle tstyle)
+	void Plot::setStyle(PlotStyle newStyle)
 	{
-		setStyle(pstyle);
-		setStyle(astyle);
-		setStyle(gstyle);
-		setStyle(lstyle);
-		setStyle(cstyle);
-		setStyle(tstyle);
+		onStyleChanged(newStyle);
 	}
 
-	void Plot::setPointCount(size_t pointCount)
+	void Plot::setStyle(Axis::AxisStyle newStyle)
 	{
-		style.pointCount = pointCount;
-		plot(graph.function, start.x, end.x);
+		auto oldStyle = axis.style;
+		axis.onStyleChanged(newStyle);
+
+		if (newStyle.centered != oldStyle.centered)
+			onAxisMove();
 	}
 
-	void Plot::setStyle(PlotStyle style)
+	void Plot::setStyle(Cursor::CursorStyle newStyle)
 	{
-		this->style = style;
-		onStyleChanged();
+		cursor.onStyleChanged(newStyle);
 	}
 
-	void Plot::setStyle(Axis::AxisStyle style)
+	void Plot::setStyle(Grid::GridStyle newStyle)
 	{
-		axis.style = style;
-		
+		grid.onStyleChanged(newStyle);
+	}
 
-		if (style.centered)
-		{
-			this->style.framePosition.x = DEFAULT_WIN_INDENT;
-			this->style.frameSize.x = DEFAULT_WIN_WIDTH - 2 * DEFAULT_WIN_INDENT;
-		}
+	void Plot::setStyle(Title::TitleStyle newStyle)
+	{
+		grid.onStyleChanged(newStyle);
+		cursor.onStyleChanged(newStyle);
+	}
+
+	void Plot::setBoundsX(float start, float end)
+	{
+		this->start.x = start;
+		this->end.x = end;
+
+		for (auto& graph : graphs)
+			graph.rebuild();
+
+		if (axis.style.centered && toCoords(0, 0).x < DEFAULT_WIN_INDENT)
+			onAxisMove();
 		else
-		{
-			this->style.framePosition.x = DEFAULT_WIN_INDENT + DEFAULT_FRAME_INDENT_LEFT;
-			this->style.frameSize.x = DEFAULT_WIN_WIDTH - 2 * DEFAULT_WIN_INDENT - DEFAULT_FRAME_INDENT_LEFT;
-		}
+			recompute();
+	}
+
+	void Plot::setBoundsY(float start, float end)
+	{
+		this->start.y = end;					// Inverted
+		this->end.y = start;
+		yAuto = false;
+		
 		recompute();
-
-		axis.onStyleChanged();
-		grid.recompute();
-		graph.recompute();
 	}
 
-	void Plot::setStyle(Grid::GridStyle style)
+	void Plot::setBounds(Values start, Values end)
 	{
-		grid.style = style;
-		grid.onStyleChanged();
+		this->start = Coords(start.x, end.y);
+		this->end = Coords(end.x, start.y);
+
+		yAuto = false;
+
+		for (auto& graph : graphs)
+			graph.rebuild();
+
+		if (axis.style.centered && toCoords(0, 0).x < DEFAULT_WIN_INDENT)
+			onAxisMove();
+		else
+			recompute();
 	}
 
-	void Plot::setStyle(Graph::GraphStyle style)
+	void Plot::plot(Func func, Graph::GraphStyle style)
 	{
-		graph.style = style;
-		graph.onStyleChanged();
+		if (graphs.empty())
+			start.y = end.y = func(start.x);
+
+		auto index = graphs.size();
+		graphs.push_back(Graph(this, style));
+
+		plot(index, func);
 	}
 
-	void Plot::setStyle(Cursor::CursorStyle style)
+	void Plot::plot(size_t index, Func func)
 	{
-		cursor.style = style;
-		cursor.onStyleChanged();
-	}
+		if (graphs.empty() || index >= graphs.size())
+			throw -1;
 
-	void Plot::setStyle(Title::TitleStyle style)
-	{
-		cursor.title.style = style;
-		cursor.title.onStyleChanged();
+		graphs[index].graph(func, start.x, end.x);
 
-		grid.example.style = style;
-		for (auto& title : grid.titles)
+		if (yAuto)
 		{
-			title.style = style;
-			title.onStyleChanged();
+			start.y = (std::max(start.y, graphs[index].max.y));
+			end.y = (std::min(end.y, graphs[index].min.y));
 		}
 
-		grid.recompute();
+		recompute();
+	}
+
+	void Plot::plot(Func func, float start, float end, Graph::GraphStyle style)
+	{
+		if (graphs.empty())
+			this->start.y = this->end.y = func(start);
+
+		auto index = graphs.size();
+		graphs.push_back(Graph(this, style));
+
+		plot(index, func, start, end);
+	}
+
+	void Plot::plot(size_t index, Func func, float start, float end)
+	{
+		if (graphs.empty() || index >= graphs.size())
+			throw - 1;
+
+		this->start.x = start;
+		this->end.x = end;
+
+		graphs[index].graph(func, start, end);
+
+		if (yAuto)
+		{
+			this->start.y = (std::max(this->start.y, graphs[index].max.y));
+			this->end.y = (std::min(this->end.y, graphs[index].min.y));
+		}
+
+		recompute();
 	}
 
 	bool Plot::processEvents()
@@ -134,8 +172,13 @@ namespace Plotter
 				window.close();
 				break;
 
+			case sf::Event::Resized:
+				onWindowResize(event.size.width, event.size.height);
+				break;
+
 			case sf::Event::MouseMoved:
 				cursor.setPosition(rangeCoords(event.mouseMove.x, event.mouseMove.y));
+				break;
 
 			default:
 				break;
@@ -147,6 +190,7 @@ namespace Plotter
 
 	void Plot::update()
 	{
+
 	}
 
 	void Plot::render()
@@ -156,61 +200,134 @@ namespace Plotter
 		window.display();
 	}
 
-	void Plot::initWindow()
-	{
-		window.create(sf::VideoMode(style.windowSize.x, style.windowSize.y), style.windowName, sf::Style::Close);
-		window.setMouseCursorVisible(false);
-	}
-
 	void Plot::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	{
 		states.transform *= getTransform();
 		target.draw(grid, states);
-		target.draw(graph, states);
 		target.draw(axis, states);
+
+		for (auto& graph : graphs)
+			target.draw(graph, states);
+
 		target.draw(cursor, states);
-		target.draw(frameShape, states);
+
+		if (cursor.style.flags & Cursor::CursorStyle::SHOW_TITLE)
+			target.draw(cursor.title, states);
 
 		for (auto& title : grid.titles)
 			target.draw(title, states);
-		target.draw(cursor.title, states);
+
+		target.draw(frameShape, states);
 	}
 
-	void Plot::plot(Func func, float start, float end)
+	void Plot::onStyleChanged(PlotStyle nstyle)
 	{
-		this->start.x = start;
-		this->end.x = end;
+		auto ostyle = style;
+		style = nstyle;
 
-		graph.graph(func, start, end);
+		if (ostyle.windowSize != style.windowSize)
+			onWindowResize(style.windowSize.x, style.windowSize.y);
 
-		this->start.y = graph.max.y;
-		this->end.y = graph.min.y;
-
-		scale.x = style.frameSize.x / (end - start);
-		scale.y = style.frameSize.y / (this->end.y - this->start.y);
-
-		graph.recompute();
-		axis.recompute();
-		grid.recompute();
+		if (ostyle.pointCount != style.pointCount)
+			for (auto& graph : graphs)
+			{
+				graph.rebuild();
+				graph.recompute();
+			}
+		
+		window.setTitle(style.windowName);
+		frameShape.setOutlineColor(style.frameColor);
 	}
 
-	void Plot::onStyleChanged()
+	void Plot::onWindowResize(float width, float height)
 	{
-		initWindow();
+		auto size = Coords(width, height);
+		auto view = window.getView();
+		auto resize = size - style.windowSize;
+
+		style.windowSize = size;
+
+		view.setSize(style.windowSize);
+		view.setCenter(size / 2.f);
+		window.setView(view);
+
+		onFrameResize(frameSize.x + resize.x, frameSize.y + resize.y);
+	}
+
+	void Plot::onFrameResize(float width, float height)
+	{
+		frameSize.x = width;
+		frameSize.y = height;
+		frameShape.setSize(frameSize);
+
 		recompute();
+	}
+
+	void Plot::onAxisMove()
+	{
+		auto pos = Coords(
+			DEFAULT_WIN_INDENT,
+			DEFAULT_WIN_INDENT
+		);
+		auto size = Coords(
+			style.windowSize.x - 2 * DEFAULT_WIN_INDENT,
+			style.windowSize.y - 2 * DEFAULT_WIN_INDENT
+		);
+
+		if (axis.style.centered == false || toCoords(0, 0).x < DEFAULT_WIN_INDENT)
+		{
+			size.x -= DEFAULT_FRAME_INDENT_LEFT;
+			pos.x += DEFAULT_FRAME_INDENT_LEFT;
+		}
+		setPosition(pos.x, pos.y);
+		onFrameResize(size.x, size.y);
+	}
+
+	void Plot::init()
+	{
+		window.create(sf::VideoMode(style.windowSize.x, style.windowSize.y), style.windowName);
+		window.setMouseCursorVisible(false);
+
+		start.x = -10;
+		end.x = 10;
+		start.y = 10;
+		end.y = -10;
+
+		setPosition(DEFAULT_WIN_INDENT, DEFAULT_WIN_INDENT);	
+		frameSize.x = style.windowSize.x - 2 * DEFAULT_WIN_INDENT;
+		frameSize.y = style.windowSize.y - 2 * DEFAULT_WIN_INDENT;
+
+		if (!axis.style.centered)
+		{
+			frameSize.x -= DEFAULT_FRAME_INDENT_LEFT;
+			move(DEFAULT_FRAME_INDENT_LEFT, 0);
+		}
+
+		scale.x = frameSize.x / (end.x - start.x);
+		scale.y = frameSize.y / (end.y - start.y);
+
+		frameShape.setSize(frameSize);
+		frameShape.setOutlineThickness(-1.f);
+		frameShape.setOutlineColor(style.frameColor);
+		frameShape.setFillColor(sf::Color::Transparent);
+
+		axis.init();
+		grid.init();
+		cursor.init();
 	}
 
 	void Plot::recompute()
 	{
-		setPosition(style.framePosition);
+		scale = Coords(
+			frameSize.x / (end.x - start.x),
+			frameSize.y / (end.y - start.y)
+		);
 
-		frameShape.setSize(style.frameSize);
-		frameShape.setOutlineThickness(-1.f);
-		frameShape.setFillColor(Color::Transparent);
-		frameShape.setOutlineColor(style.frameColor);
-
-		scale.x = style.frameSize.x / (end.x - start.x);
-		scale.y = style.frameSize.y / (end.y - start.y);
+		axis.recompute();
+		grid.recompute();
+		cursor.recompute();
+		for (auto& graph : graphs)
+			graph.recompute();
 	}
 
 	Coords Plot::toCoords(Values point) const
@@ -242,8 +359,8 @@ namespace Plotter
 	Coords Plot::rangeCoords(Coords point) const
 	{
 		return Coords(
-			std::max(std::min(point.x - getPosition().x, style.frameSize.x), 0.f),
-			std::max(std::min(point.y - getPosition().y, style.frameSize.y), 0.f)
+			std::max(std::min(point.x - getPosition().x, frameSize.x), 0.f),
+			std::max(std::min(point.y - getPosition().y, frameSize.y), 0.f)
 		);
 	}
 
@@ -251,4 +368,6 @@ namespace Plotter
 	{
 		return rangeCoords(Coords(cx, cy));
 	}
+
+	
 }

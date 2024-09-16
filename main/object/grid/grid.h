@@ -28,9 +28,11 @@ namespace Plotter
 
 		Grid(Plot* layout, GridStyle style = DEFAULT_GRID_STYLE, Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE);
 
-		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+		void onStyleChanged(GridStyle nstyle);
+		void onStyleChanged(Title::TitleStyle nstyle);
 
-		void onStyleChanged() override;
+		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+		void init() override;
 		void recompute() override;
 
 		GridStyle			style;

@@ -12,12 +12,38 @@ namespace Plotter
 
 	Grid::Grid(Plot* layout, GridStyle style, Title::TitleStyle tstyle) :
 		Object	{ layout },
-		style	{ style },
+		example{ layout, tstyle },
 		linesH	{ sf::Lines },
 		linesV	{ sf::Lines },
-		example	{ layout, tstyle }
+		titles	{ style.countX + style.countY + 2, example }
 	{
-		onStyleChanged();
+	}
+
+	void Grid::onStyleChanged(GridStyle nstyle)
+	{
+		auto ostyle = style;
+		style = nstyle;
+
+		if (ostyle.countX != style.countX || ostyle.countY != style.countY)
+		{
+			auto size = sf::Vector2i(style.countX + 1, style.countY + 1);
+			linesV.resize(2 * size.x);
+			linesH.resize(2 * size.y);
+			titles.resize(size.x + size.y, example);
+			recompute();
+		}
+		else
+		{
+			for (auto i = 0; i < linesH.getVertexCount(); i++)
+				linesH[i].color = style.color;
+		}
+	}
+
+	void Grid::onStyleChanged(Title::TitleStyle nstyle)
+	{
+		example.onStyleChanged(nstyle);
+		for (auto& title : titles)
+			title.onStyleChanged(nstyle);
 	}
 
 	void Grid::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -30,64 +56,72 @@ namespace Plotter
 			//target.draw(title, states);
 	}
 
-	void Grid::onStyleChanged()
+	void Grid::init()
 	{
 		auto size = sf::Vector2i(style.countX + 1, style.countY + 1);
 		linesV.resize(2 * size.x);
 		linesH.resize(2 * size.y);
+
 		titles.resize(size.x + size.y, example);
+		for (auto& title : titles)
+			title.init();
+
 		recompute();
 	}
 
 	void Grid::recompute()
 	{
 		auto step = Coords(
-			layout->style.frameSize.x / style.countX,
-			layout->style.frameSize.y / style.countY
+			layout->frameSize.x / style.countX,
+			layout->frameSize.y / style.countY
 		);
-
+		auto frameIndent = Coords(
+			DEFAULT_TEXT_INDENT,
+			DEFAULT_TEXT_INDENT
+		);
 		auto titleOffset = Coords(
 			0,								// { horizontal title } - variable
-			-example.style.charSize / 2		// { vertical title }	- const
+			-example.style.charSize / 2.f	// { vertical title }	- const
 		);
 		auto titlePosition = Coords(
-			-example.style.charSize / 2,	// { vertical title }	- variable
-			layout->style.frameSize.y		// { horizontal title } - const
+			-example.style.charSize / 2.f,	// { horizontal title } - variable
+			layout->frameSize.y				// { vertical title }	- const
 		);
+
 		if (layout->axis.style.centered)
-			titlePosition = layout->axis.intersection + Coords(-5, 0);
-
-
-
-		for (auto i = 0; i <= style.countX; i++)
-		{
-			// Vertical Line
-			auto posx = i * step.x;
-			linesV[2 * i] = sf::Vertex(Coords(posx, 0), style.color);
-			linesV[2 * i + 1] = sf::Vertex(Coords(posx, layout->style.frameSize.y), style.color);
-
-			// Horizontal Title
-			titles[i].setString(toString(layout->toValues(posx, 0).x));
-
-			titleOffset.x = -titles[i].size.x / 2.f;
-			posx = std::min(std::max(posx + titleOffset.x, 0.f), layout->style.frameSize.x + 2.3f * titleOffset.x); // xD
-
-			titles[i].setPosition(posx, titlePosition.y);
-		}
+			titlePosition = layout->axis.intersection + Coords(-DEFAULT_TEXT_INDENT, 0);
 		
-		for (auto i = 0; i <= style.countY; i++)
+		for (auto x = 0; x <= style.countX; x++)
 		{
-			// Horizontal Line
-			auto posy = i * step.y;
-			linesH[2 * i] = sf::Vertex(Coords(0, posy), style.color);
-			linesH[2 * i + 1] = sf::Vertex(Coords(layout->style.frameSize.x, posy), style.color);
+			auto posx = x * step.x;
 
-			// Vertical Title
-			auto index = style.countX + i + 1;
-			titles[index].setString(toString(layout->toValues(0, posy).y));
+			// Lines Vertical
+			linesV[2 * x] = sf::Vertex(Coords(posx, 0.f), style.color);
+			linesV[2 * x + 1] = sf::Vertex(Coords(posx, layout->frameSize.y), style.color);
+
+			// Titles Horizontal
+			titles[x].setString(toString(layout->toValues(posx, 0.f).x));
+
+			titleOffset.x = -titles[x].size.x / 2.f;
+			posx = std::max(std::min(posx + titleOffset.x, layout->frameSize.x - titles[x].size.x - frameIndent.x), frameIndent.x);
+
+			titles[x].setPosition(posx, titlePosition.y);
+		}
+
+		for (auto y = 0; y <= style.countY; y++)
+		{
+			auto posy = y * step.y;
+
+			// Lines Horizontal
+			linesH[2 * y] = sf::Vertex(Coords(0.f, posy), style.color);
+			linesH[2 * y + 1] = sf::Vertex(Coords(layout->frameSize.x, posy), style.color);
+
+			auto index = style.countX + y + 1;
+			// Titles Vertical
+			titles[index].setString(toString(layout->toValues(0.f, posy).y));
 
 			auto posx = titlePosition.x - titles[index].size.x;
-			posy = std::min(std::max(posy + titleOffset.y, 0.f), layout->style.frameSize.y + 2.6f * titleOffset.y); // xDDD
+			posy = std::max(std::min(posy + titleOffset.y, layout->frameSize.y - titles[index].size.y - frameIndent.y), frameIndent.y);
 
 			titles[index].setPosition(posx, posy);
 		}

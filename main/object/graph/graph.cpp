@@ -3,6 +3,7 @@
 
 namespace Plotter
 {
+
 	Graph::GraphStyle::GraphStyle(Color color, Flags flags, uint8_t transparency) :
 		color			{ color },
 		flags			{ flags },
@@ -21,6 +22,7 @@ namespace Plotter
 	void Graph::graph(Func func, float start, float end)
 	{
 		points.clear();
+		max = min = Values(start, func(start));
 
 		auto step = (end - start) / layout->style.pointCount;
 		for (auto x = start; x <= end; x += step)
@@ -56,26 +58,27 @@ namespace Plotter
 	{
 		states.transform *= getTransform();
 
-		switch (style.flags)
-		{
-		case GraphStyle::SHOW_LINE:
+		if (style.flags & GraphStyle::SHOW_LINE)
 			target.draw(line, states);
-			break;
-		case GraphStyle::SHOW_VOLUME:
+		
+		if (style.flags & GraphStyle::SHOW_VOLUME)
 			target.draw(volume, states);
-			break;
-		case GraphStyle::SHOW_ALL:
-			target.draw(line, states);
-			target.draw(volume, states);
-			break;
-
-		default:
-			break;
-		}
 	}
 
-	void Graph::onStyleChanged()
+	void Graph::onStyleChanged(GraphStyle nstyle)
 	{
+		style = nstyle;
+
+		for (auto i = 0; i < line.getVertexCount(); i++)
+			line[i].color = style.color;
+
+		for (auto i = 0; i < volume.getVertexCount(); i++)
+			volume[i].color = Color(style.color.toInteger() + style.transparency);
+	}
+
+	void Graph::init()
+	{
+		recompute();
 	}
 
 	void Graph::recompute()

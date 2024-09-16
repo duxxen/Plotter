@@ -39,11 +39,11 @@ namespace Plotter
 		void graph(Func func, float start, float end);
 		void graph(const vector<Values>& points);
 
+		void onStyleChanged(GraphStyle nstyle);
 		void rebuild();
 
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-		void onStyleChanged() override;
+		void init() override;
 		void recompute() override;
 
 		GraphStyle		style;

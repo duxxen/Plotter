@@ -27,9 +27,10 @@ namespace Plotter
 
 		Axis(Plot* layout, AxisStyle style = DEFAULT_AXIS_STYLE);
 
-		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+		void onStyleChanged(AxisStyle nstyle);
 
-		void onStyleChanged() override;
+		void init() override;
+		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 		void recompute() override;
 
 		AxisStyle		style;

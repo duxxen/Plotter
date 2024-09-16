@@ -30,17 +30,18 @@ namespace Plotter
 		Title(Plot* layout, TitleStyle style = DEFAULT_TITLE_STYLE);
 
 		void setString(string string);
+		void onStyleChanged(TitleStyle nstyle);
 
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
-
-		void onStyleChanged() override;
+		void init() override;
 		void recompute() override;
 
-		TitleStyle style;
+		static sf::Font font;
+		static bool		fontLoaded;
 
-		Coords size;
+		TitleStyle		style;
 
-		sf::Font font;
-		sf::Text text;
+		Coords			size;
+		sf::Text		text;
 	};
 }

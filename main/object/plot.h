@@ -21,9 +21,6 @@ namespace Plotter
 			string		windowName;
 			Coords		windowSize;
 			Color		backgroundColor;
-
-			Coords		frameSize;
-			Coords		framePosition;
 			Color		frameColor;
 
 			uint32_t	pointCount;
@@ -32,8 +29,6 @@ namespace Plotter
 				string windowName = "Plot", 
 				Coords windowSize = Coords(DEFAULT_WIN_WIDTH, DEFAULT_WIN_HEIGHT),
 				Color backgroundColor = Color::Black,
-				Coords frameSize = Coords(DEFAULT_WIN_WIDTH - 2 * DEFAULT_WIN_INDENT, DEFAULT_WIN_HEIGHT - 2 * DEFAULT_WIN_INDENT),
-				Coords framePosition = Coords(DEFAULT_WIN_INDENT, DEFAULT_WIN_INDENT),
 				Color frameColor = Color::White,
 				uint32_t pointCount = DEFAULT_POINT_COUNT
 			);
@@ -44,39 +39,33 @@ namespace Plotter
 			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
 			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
 			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
-			Graph::GraphStyle lstyle = Graph::DEFAULT_GRAPH_STYLE,
 			Cursor::CursorStyle cstyle = Cursor::DEFAULT_CURSOR_STYLE,
 			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
 		);
 
-		void init(
-			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
-			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
-			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
-			Graph::GraphStyle lstyle = Graph::DEFAULT_GRAPH_STYLE,
-			Cursor::CursorStyle cstyle = Cursor::DEFAULT_CURSOR_STYLE,
-			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
-		);
+		void setStyle(PlotStyle newStyle);
+		void setStyle(Axis::AxisStyle newStyle);
+		void setStyle(Grid::GridStyle newStyle);
+		void setStyle(Cursor::CursorStyle newStyle);
+		void setStyle(Title::TitleStyle newStyle);
 
-		void setPointCount(size_t pointCount);
+		void setBoundsX(float start = -10, float end = 10);
+		void setBoundsY(float start, float end);
+		void setBounds(Values start, Values end);
 
-		void setStyle(PlotStyle style);
-		void setStyle(Axis::AxisStyle style);
-		void setStyle(Grid::GridStyle style);
-		void setStyle(Graph::GraphStyle style);
-		void setStyle(Cursor::CursorStyle style);
-		void setStyle(Title::TitleStyle style);
+		void plot(Func func, Graph::GraphStyle style = Graph::DEFAULT_GRAPH_STYLE);
+		void plot(size_t index, Func func);
+
+		void plot(Func func, float start, float end, Graph::GraphStyle style = Graph::DEFAULT_GRAPH_STYLE);
+		void plot(size_t index, Func func, float start, float end);
 
 		bool processEvents();
 		void update();
 		void render();
 
-		void plot(Func func, float start, float end);
-
 	private:
-
-		void initWindow();
 		
+		// -------------------------------------- TRANSFORMATION ------------------------------------------
 		Coords toCoords(Values point) const;
 		Values toValues(Coords point) const;
 		Coords toCoords(float vx, float vy) const;
@@ -85,18 +74,31 @@ namespace Plotter
 		Coords rangeCoords(Coords point) const;
 		Coords rangeCoords(float cx, float cy) const;
 
-		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+		// -------------------------------------- ??? ------------------------------------------
 
-		void onStyleChanged() override;
+		void onStyleChanged(PlotStyle style);
+		void onWindowResize(float width, float height);
+		void onFrameResize(float width, float height);
+		void onAxisMove();
+
+		// ---------------------------------------- OVERRIDES --------------------------------------------
+
+		void init() override;
+		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 		void recompute() override;
 
 		PlotStyle			style;
 
-		Values				scale; // Used for Value <-> Coords transform
+		Coords				frameSize;
+		Values				scale;		// Used for Value <-> Coords transform
 		Values				start;
 		Values				end;
 
-		Graph				graph;
+		float				max		{ 0 };
+		float				min		{ 0 };
+		bool				yAuto	{ true };	// auto ordinate axis scale
+
+		vector<Graph>		graphs;
 		Cursor				cursor;
 		Axis				axis;
 		Grid				grid;
