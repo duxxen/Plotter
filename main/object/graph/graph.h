@@ -26,7 +26,7 @@ namespace Plotter
 
 			GraphStyle(
 				Color color = Color::Red,
-				Flags flags = Flags::SHOW_LINE,
+				Flags flags = Flags::SHOW_ALL,
 				uint8_t transparecny = 0x40
 			);
 		}

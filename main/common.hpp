@@ -33,5 +33,5 @@ namespace Plotter
 	static inline const uint16_t	DEFAULT_WIN_INDENT			{ 15U };
 	static inline const uint16_t	DEFAULT_FRAME_INDENT_LEFT	{ 40U };
 	static inline const uint16_t	DEFAULT_TEXT_INDENT			{ 5U };
-	static inline const uint32_t	DEFAULT_POINT_COUNT			{ 4000U };
+	static inline const uint32_t	DEFAULT_POINT_COUNT			{ 32000U };
 }

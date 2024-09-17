@@ -18,7 +18,7 @@ namespace Plotter
 
 			AxisStyle(
 				Color color = Color::White,
-				bool centered = false
+				bool centered = true
 			);
 		}
 		DEFAULT_AXIS_STYLE;
