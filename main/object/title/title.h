@@ -6,6 +6,7 @@ namespace Plotter
 	class Title : Object
 	{
 		friend class Plot;
+		friend class Axis;
 		friend class Grid;
 		friend class Cursor;
 		
@@ -19,7 +20,7 @@ namespace Plotter
 
 			TitleStyle(
 				Color color = Color::White,
-				uint8_t charSize = 10U,
+				uint8_t charSize = 12U,
 				string fontPath = "assets/arial.ttf"
 			);
 		}
@@ -29,7 +30,7 @@ namespace Plotter
 
 		Title(Plot* layout, TitleStyle style = DEFAULT_TITLE_STYLE);
 
-		void setString(string string);
+		void setString(sf::String string);
 		void onStyleChanged(TitleStyle nstyle);
 
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

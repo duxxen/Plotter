@@ -12,7 +12,8 @@ namespace Plotter
 
 	Grid::Grid(Plot* layout, GridStyle style, Title::TitleStyle tstyle) :
 		Object	{ layout },
-		example{ layout, tstyle },
+		style	{ style },
+		example	{ layout, tstyle },
 		linesH	{ sf::Lines },
 		linesV	{ sf::Lines },
 		titles	{ style.countX + style.countY + 2, example }

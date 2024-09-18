@@ -46,7 +46,7 @@ namespace Plotter
 
 		CursorStyle		style;
 
-		Title			title;
+		Title			titleValues;
 		sf::VertexArray lines;
 	};
 }

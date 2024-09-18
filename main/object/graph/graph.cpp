@@ -24,6 +24,11 @@ namespace Plotter
 		points.clear();
 		max = min = Values(start, func(start));
 
+		auto temp = start;
+		start = std::min(start, end);
+		end = std::max(temp, end);
+
+
 		auto step = (end - start) / layout->style.pointCount;
 		for (auto x = start; x <= end; x += step)
 		{
@@ -78,7 +83,6 @@ namespace Plotter
 
 	void Graph::init()
 	{
-		recompute();
 	}
 
 	void Graph::recompute()
@@ -87,13 +91,16 @@ namespace Plotter
 		volume.clear();
 		for (auto& point : points)
 		{
+			auto coords = layout->rangeCoords(layout->toCoords(point));
+			//auto coords = (layout->toCoords(point));
+			
 			line.append(sf::Vertex(
-				layout->toCoords(point),
+				coords,
 				style.color
 			));
 
 			volume.append(sf::Vertex(
-				layout->toCoords(point),
+				coords,
 				Color(style.color.toInteger() + style.transparency)
 			));
 
@@ -101,6 +108,7 @@ namespace Plotter
 				layout->toCoords(point.x, 0),
 				Color(style.color.toInteger() + style.transparency)
 			));
+			
 		}
 	}
 	

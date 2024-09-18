@@ -36,6 +36,9 @@ namespace Plotter
 		DEFAULT_PLOT_STYLE;
 
 		Plot(
+			Func func,
+			float start = -10.f,
+			float end = 10.f,
 			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
 			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
 			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
@@ -43,21 +46,42 @@ namespace Plotter
 			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
 		);
 
+		Plot(
+			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
+			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
+			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
+			Cursor::CursorStyle cstyle = Cursor::DEFAULT_CURSOR_STYLE,
+			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
+		);
+
+		// -------------------------------------- STYLE SETTERS ------------------------------------------
+
 		void setStyle(PlotStyle newStyle);
 		void setStyle(Axis::AxisStyle newStyle);
 		void setStyle(Grid::GridStyle newStyle);
 		void setStyle(Cursor::CursorStyle newStyle);
 		void setStyle(Title::TitleStyle newStyle);
 
+		// -------------------------------------- BOUNDS SETTERS ------------------------------------------
+
 		void setBoundsX(float start = -10, float end = 10);
 		void setBoundsY(float start, float end);
 		void setBounds(Values start, Values end);
+		void setBounds(float startX, float endX, float startY, float endY);
 
-		void plot(Func func, Graph::GraphStyle style = Graph::DEFAULT_GRAPH_STYLE);
+		void enableAutoScaleY(bool enable);
+
+		// -------------------------------------- PLOT BUILDERS ------------------------------------------
+
+		void plot(Func func);
+		void plot(Func func, Graph::GraphStyle style);
 		void plot(size_t index, Func func);
 
-		void plot(Func func, float start, float end, Graph::GraphStyle style = Graph::DEFAULT_GRAPH_STYLE);
+		void plot(Func func, float start, float end);
+		void plot(Func func, float start, float end, Graph::GraphStyle style);
 		void plot(size_t index, Func func, float start, float end);
+
+		// -------------------------------------- WINDOW FUNCTIONS ------------------------------------------
 
 		bool processEvents();
 		void update();
@@ -66,6 +90,7 @@ namespace Plotter
 	private:
 		
 		// -------------------------------------- TRANSFORMATION ------------------------------------------
+
 		Coords toCoords(Values point) const;
 		Values toValues(Coords point) const;
 		Coords toCoords(float vx, float vy) const;
@@ -74,12 +99,16 @@ namespace Plotter
 		Coords rangeCoords(Coords point) const;
 		Coords rangeCoords(float cx, float cy) const;
 
+		bool isInside(Coords point) const;
+		bool isInside(float cx, float cy) const;
+
 		// -------------------------------------- ??? ------------------------------------------
 
 		void onStyleChanged(PlotStyle style);
-		void onWindowResize(float width, float height);
-		void onFrameResize(float width, float height);
-		void onAxisMove();
+		void resizeWindow(float width, float height);
+		void recomputeFrame();
+		Graph* nearestGraph();
+		void zoom(float delta);
 
 		// ---------------------------------------- OVERRIDES --------------------------------------------
 
@@ -87,23 +116,40 @@ namespace Plotter
 		void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 		void recompute() override;
 
-		PlotStyle			style;
+		// ------------------------------------------ STYLE --------------------------------------------
 
-		Coords				frameSize;
-		Values				scale;		// Used for Value <-> Coords transform
-		Values				start;
-		Values				end;
+		PlotStyle					style;
 
-		float				max		{ 0 };
-		float				min		{ 0 };
-		bool				yAuto	{ true };	// auto ordinate axis scale
+		// ---------------------------------------- TRANSFORMS --------------------------------------------
 
-		vector<Graph>		graphs;
-		Cursor				cursor;
-		Axis				axis;
-		Grid				grid;
+		Coords						frameSize;
+		Values						scale;		// Used for Value <-> Coords transform
+		Values						start;
+		Values						end;
+		bool						yAuto{ true };	// auto ordinate axis scale
 
-		sf::RectangleShape	frameShape;
-		sf::RenderWindow	window;
+		// ---------------------------------------- OBJECTS --------------------------------------------
+
+		Graph*						tracingGraph{ nullptr };
+		vector<Graph>				graphs;
+		Cursor						cursor;
+		Axis						axis;
+		Grid						grid;
+
+		// ---------------------------------------- CONTROLS --------------------------------------------
+
+		Coords						mouse;
+		bool						shift;
+
+		bool						grabbed;
+		bool						rebounding;
+		bool						tracing;
+		Coords						pressPosition;
+
+		// ---------------------------------------- GRAPHICS --------------------------------------------
+
+		sf::RectangleShape			frameShape;
+		sf::RectangleShape			areaShape;
+		sf::RenderWindow			window;
 	};
 }

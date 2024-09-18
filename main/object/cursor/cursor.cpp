@@ -11,9 +11,10 @@ namespace Plotter
 	}
 
 	Cursor::Cursor(Plot* layout, CursorStyle style, Title::TitleStyle tstyle) :
-		Object	{ layout },
-		lines	{ sf::Lines, 4 },
-		title	{ layout, tstyle }
+		Object		{ layout },
+		style		{ style },
+		lines		{ sf::Lines, 4 },
+		titleValues	{ layout, tstyle }
 	{
 	}
 
@@ -25,13 +26,13 @@ namespace Plotter
 		lines[3].position = Coords(0, coords.y);
 
 		auto value = layout->toValues(coords);
-		title.setString(toString(value.x) + "; " + toString(value.y));
+		titleValues.setString(toString(value.x) + "; " + toString(value.y));
 		
 		auto offset = coords + style.titleOffset;
-		if (offset.x + title.size.x + 5 >= layout->frameSize.x)	offset.x = layout->frameSize.x - title.size.x - 5;
-		if (offset.y + title.size.y + 5 >= layout->frameSize.y)	offset.y = layout->frameSize.y - title.size.y - 5;
+		if (offset.x + titleValues.size.x + 5 >= layout->frameSize.x)	offset.x = layout->frameSize.x - titleValues.size.x - 5;
+		if (offset.y + titleValues.size.y + 5 >= layout->frameSize.y)	offset.y = layout->frameSize.y - titleValues.size.y - 5;
 
-		title.setPosition(offset);	
+		titleValues.setPosition(offset);
 	}
 
 	void Cursor::onStyleChanged(CursorStyle nstyle)
@@ -46,7 +47,7 @@ namespace Plotter
 
 	void Cursor::onStyleChanged(Title::TitleStyle nstyle)
 	{
-		title.onStyleChanged(nstyle);
+		titleValues.onStyleChanged(nstyle);
 	}
 
 	void Cursor::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -63,7 +64,7 @@ namespace Plotter
 	void Cursor::init()
 	{
 		onStyleChanged(style);
-		title.init();
+		titleValues.init();
 	}
 
 	void Cursor::recompute()

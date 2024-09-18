@@ -20,6 +20,26 @@ namespace Plotter
 	}
 
 	Plot::Plot(
+		Func func,
+		float start,
+		float end,
+		PlotStyle pstyle,
+		Axis::AxisStyle astyle,
+		Grid::GridStyle gstyle,
+		Cursor::CursorStyle cstyle,
+		Title::TitleStyle tstyle)
+		:
+		Object{ nullptr },
+		axis{ this, astyle, tstyle },
+		grid{ this, gstyle, tstyle },
+		cursor{ this, cstyle, tstyle },
+		style{ pstyle }
+	{
+		init();
+		plot(func, start, end);
+	}
+
+	Plot::Plot(
 		PlotStyle pstyle, 
 		Axis::AxisStyle astyle,
 		Grid::GridStyle gstyle,
@@ -27,7 +47,7 @@ namespace Plotter
 		Title::TitleStyle tstyle)
 		:
 		Object	{ nullptr },
-		axis	{ this, astyle },
+		axis	{ this, astyle, tstyle },
 		grid	{ this, gstyle, tstyle },
 		cursor	{ this, cstyle, tstyle },
 		style	{ pstyle }
@@ -45,8 +65,11 @@ namespace Plotter
 		auto oldStyle = axis.style;
 		axis.onStyleChanged(newStyle);
 
-		if (newStyle.centered != oldStyle.centered)
-			onAxisMove();
+		if (oldStyle.centered != newStyle.centered)
+		{
+			recomputeFrame();
+			recompute();
+		}
 	}
 
 	void Plot::setStyle(Cursor::CursorStyle newStyle)
@@ -65,53 +88,65 @@ namespace Plotter
 		cursor.onStyleChanged(newStyle);
 	}
 
+	void Plot::enableAutoScaleY(bool enable)
+	{
+		yAuto = enable;
+	}
+
 	void Plot::setBoundsX(float start, float end)
 	{
 		this->start.x = start;
 		this->end.x = end;
+		scale.x = frameSize.x / abs(end - start);
 
 		for (auto& graph : graphs)
 			graph.rebuild();
 
-		if (axis.style.centered && toCoords(0, 0).x < DEFAULT_WIN_INDENT)
-			onAxisMove();
-		else
-			recompute();
+		axis.recompute();
+		recomputeFrame();
+		recompute();
 	}
 
 	void Plot::setBoundsY(float start, float end)
 	{
-		this->start.y = end;					// Inverted
-		this->end.y = start;
-		yAuto = false;
-		
+		this->start.y = start;
+		this->end.y = end;
+		scale.y = frameSize.y / abs(end - start);
+
 		recompute();
 	}
 
 	void Plot::setBounds(Values start, Values end)
 	{
-		this->start = Coords(start.x, end.y);
-		this->end = Coords(end.x, start.y);
+		this->start.y = start.y;
+		this->end.y = end.y;
+		scale.y = frameSize.y / abs(end.y - start.y);
 
-		yAuto = false;
+		setBoundsX(start.x, end.x);
+	}
 
-		for (auto& graph : graphs)
-			graph.rebuild();
+	void Plot::setBounds(float startX, float endX, float startY, float endY)
+	{
+		setBounds(Values(startX, startY), Values(endX, endY));
+	}
 
-		if (axis.style.centered && toCoords(0, 0).x < DEFAULT_WIN_INDENT)
-			onAxisMove();
-		else
-			recompute();
+	void Plot::plot(Func func)
+	{
+		plot(func, Graph::GraphStyle(
+			DEFAULT_COLORS_ARRAY[graphs.size() % DEFAULT_COLORS_SIZE],
+			Graph::DEFAULT_GRAPH_STYLE.flags,
+			Graph::DEFAULT_GRAPH_STYLE.transparency
+		));
 	}
 
 	void Plot::plot(Func func, Graph::GraphStyle style)
 	{
-		if (graphs.empty())
+		if (graphs.empty() && yAuto)
 			start.y = end.y = func(start.x);
 
 		auto index = graphs.size();
 		graphs.push_back(Graph(this, style));
-
+		
 		plot(index, func);
 	}
 
@@ -121,19 +156,23 @@ namespace Plotter
 			throw -1;
 
 		graphs[index].graph(func, start.x, end.x);
+		
+		if (yAuto)	setBoundsY(std::min(start.y, graphs[index].min.y), std::max(start.y, graphs[index].max.y));
+		else		graphs[index].recompute();
+	}
 
-		if (yAuto)
-		{
-			start.y = (std::max(start.y, graphs[index].max.y));
-			end.y = (std::min(end.y, graphs[index].min.y));
-		}
-
-		recompute();
+	void Plot::plot(Func func, float start, float end)
+	{
+		plot(func, start, end, Graph::GraphStyle(
+			DEFAULT_COLORS_ARRAY[graphs.size() % DEFAULT_COLORS_SIZE],
+			Graph::DEFAULT_GRAPH_STYLE.flags,
+			Graph::DEFAULT_GRAPH_STYLE.transparency
+		));
 	}
 
 	void Plot::plot(Func func, float start, float end, Graph::GraphStyle style)
 	{
-		if (graphs.empty())
+		if (graphs.empty() && yAuto)
 			this->start.y = this->end.y = func(start);
 
 		auto index = graphs.size();
@@ -147,18 +186,16 @@ namespace Plotter
 		if (graphs.empty() || index >= graphs.size())
 			throw - 1;
 
-		this->start.x = start;
-		this->end.x = end;
-
 		graphs[index].graph(func, start, end);
 
 		if (yAuto)
 		{
-			this->start.y = (std::max(this->start.y, graphs[index].max.y));
-			this->end.y = (std::min(this->end.y, graphs[index].min.y));
+			this->start.y = std::min(this->start.y, graphs[index].min.y);
+			this->end.y = std::max(this->end.y, graphs[index].max.y);
+			scale.y = frameSize.y / (this->end.y - this->start.y);
 		}
 
-		recompute();
+		setBoundsX(start, end);
 	}
 
 	bool Plot::processEvents()
@@ -166,6 +203,8 @@ namespace Plotter
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
+			auto maxf = 0;
+			auto maxi = 0;
 			switch (event.type)
 			{
 			case sf::Event::Closed:
@@ -173,11 +212,85 @@ namespace Plotter
 				break;
 
 			case sf::Event::Resized:
-				onWindowResize(event.size.width, event.size.height);
+				resizeWindow(event.size.width, event.size.height);
 				break;
 
 			case sf::Event::MouseMoved:
-				cursor.setPosition(rangeCoords(event.mouseMove.x, event.mouseMove.y));
+				mouse = Coords(event.mouseMove.x, event.mouseMove.y) - getPosition();
+				if (isInside(mouse))
+				{
+					cursor.setPosition(rangeCoords(mouse));
+					window.setMouseCursorVisible(false);
+				}
+				else
+					window.setMouseCursorVisible(true);
+
+				break;
+
+			case sf::Event::MouseButtonPressed:
+				pressPosition = mouse;
+
+				switch (event.mouseButton.button)
+				{
+				case sf::Mouse::Left:
+					if (isInside(mouse))
+					{
+						rebounding = true;
+						areaShape.setPosition(mouse);
+					}
+					break;
+
+				case sf::Mouse::Right:
+					tracing = true;
+					tracingGraph = nearestGraph();
+					break;
+					
+
+				case sf::Mouse::Middle:
+					grabbed = true;
+					break;
+
+				default:
+					break;
+				}
+				
+				break;
+
+			case sf::Event::MouseButtonReleased:
+
+				switch (event.mouseButton.button)
+				{
+				case sf::Mouse::Left:
+					rebounding = false;
+					areaShape.setSize(Coords(0, 0));
+					if (pressPosition != mouse)
+						setBounds(toValues(pressPosition.x, mouse.y), toValues(mouse.x, pressPosition.y));
+					break;
+
+				case sf::Mouse::Right:
+					tracing = false;
+					tracingGraph = nullptr;
+					break;
+					 
+				case sf::Mouse::Middle:
+					grabbed = false;
+					break;
+
+				default:
+					break;
+				}
+				break;
+
+			case sf::Event::MouseWheelScrolled:
+				zoom(event.mouseWheelScroll.delta);
+				break;
+
+			case sf::Event::KeyPressed:
+				shift = event.key.shift;
+				break;
+
+			case sf::Event::KeyReleased:
+				shift = event.key.shift;
 				break;
 
 			default:
@@ -190,7 +303,29 @@ namespace Plotter
 
 	void Plot::update()
 	{
+		if (isInside(mouse))
+		{
+			if (rebounding)
+			{
+				auto size = mouse - pressPosition;
+				areaShape.setSize(size);
+			}
+			else if (tracing)
+			{
+				auto vx = toValues(mouse).x;
+				auto vy = tracingGraph->function(vx);
+				cursor.setPosition(rangeCoords(toCoords(vx, vy)));
+				cursor.titleValues.setString(toString(vx) + ", " + toString(vy));
+			}
+			else if (grabbed)
+			{
+				auto offset = toValues(pressPosition) - toValues(mouse);
+				pressPosition = mouse;
 
+				if (shift)	setBoundsX(start.x + offset.x, end.x + offset.x);
+				else		setBounds(start + offset, end + offset);
+			}
+		}
 	}
 
 	void Plot::render()
@@ -210,9 +345,16 @@ namespace Plotter
 			target.draw(graph, states);
 
 		target.draw(cursor, states);
+		target.draw(areaShape, states);
+
+		if (!axis.style.nameX.isEmpty())
+			target.draw(axis.nameX, states);
+		if (!axis.style.nameY.isEmpty())
+			target.draw(axis.nameY, states);
 
 		if (cursor.style.flags & Cursor::CursorStyle::SHOW_TITLE)
-			target.draw(cursor.title, states);
+			target.draw(cursor.titleValues, states);
+		
 
 		for (auto& title : grid.titles)
 			target.draw(title, states);
@@ -225,91 +367,75 @@ namespace Plotter
 		auto ostyle = style;
 		style = nstyle;
 
-		if (ostyle.windowSize != style.windowSize)
-			onWindowResize(style.windowSize.x, style.windowSize.y);
-
-		if (ostyle.pointCount != style.pointCount)
+		if (ostyle.pointCount != nstyle.pointCount)
 			for (auto& graph : graphs)
 			{
 				graph.rebuild();
 				graph.recompute();
 			}
-		
-		window.setTitle(style.windowName);
-		frameShape.setOutlineColor(style.frameColor);
+
+		if (ostyle.windowSize != nstyle.windowSize)
+			resizeWindow(nstyle.windowSize.x, nstyle.windowSize.y);
+
+		window.setTitle(nstyle.windowName);
+		frameShape.setOutlineColor(nstyle.frameColor);
 	}
 
-	void Plot::onWindowResize(float width, float height)
+	void Plot::resizeWindow(float width, float height)
 	{
-		auto size = Coords(width, height);
 		auto view = window.getView();
-		auto resize = size - style.windowSize;
-
-		style.windowSize = size;
-
-		view.setSize(style.windowSize);
-		view.setCenter(size / 2.f);
+		view.setSize(width, height);
+		view.setCenter(width / 2.f, height / 2.f);
 		window.setView(view);
+		window.setSize(sf::Vector2u(width, height));
 
-		onFrameResize(frameSize.x + resize.x, frameSize.y + resize.y);
-	}
-
-	void Plot::onFrameResize(float width, float height)
-	{
-		frameSize.x = width;
-		frameSize.y = height;
-		frameShape.setSize(frameSize);
-
+		recomputeFrame();
 		recompute();
 	}
 
-	void Plot::onAxisMove()
+	void Plot::recomputeFrame()
 	{
-		auto pos = Coords(
-			DEFAULT_WIN_INDENT,
+		auto windowSize = window.getSize();
+		auto indent = !axis.style.centered || axis.intersection.x <= DEFAULT_WIN_INDENT ? 
+			Coords(DEFAULT_FRAME_INDENT_LEFT, DEFAULT_AXIS_NAME_INDENT) : Coords(0, 0);
+
+		auto frameCoords = Coords(
+			DEFAULT_WIN_INDENT + indent.x, 
 			DEFAULT_WIN_INDENT
 		);
-		auto size = Coords(
-			style.windowSize.x - 2 * DEFAULT_WIN_INDENT,
-			style.windowSize.y - 2 * DEFAULT_WIN_INDENT
+		frameSize = Coords(
+			windowSize.x - 2.f * DEFAULT_WIN_INDENT - indent.x,
+			windowSize.y - 2.f * DEFAULT_WIN_INDENT - indent.y
+		);
+		scale = Values(
+			frameSize.x / (end.x - start.x),
+			frameSize.y / (end.y - start.y)
 		);
 
-		if (axis.style.centered == false || toCoords(0, 0).x < DEFAULT_WIN_INDENT)
-		{
-			size.x -= DEFAULT_FRAME_INDENT_LEFT;
-			pos.x += DEFAULT_FRAME_INDENT_LEFT;
-		}
-		setPosition(pos.x, pos.y);
-		onFrameResize(size.x, size.y);
+		setPosition(frameCoords);
+		frameShape.setSize(frameSize);
 	}
 
 	void Plot::init()
 	{
 		window.create(sf::VideoMode(style.windowSize.x, style.windowSize.y), style.windowName);
-		window.setMouseCursorVisible(false);
 
-		start.x = -10;
-		end.x = 10;
-		start.y = 10;
-		end.y = -10;
-
-		setPosition(DEFAULT_WIN_INDENT, DEFAULT_WIN_INDENT);	
-		frameSize.x = style.windowSize.x - 2 * DEFAULT_WIN_INDENT;
-		frameSize.y = style.windowSize.y - 2 * DEFAULT_WIN_INDENT;
-
-		if (!axis.style.centered)
-		{
-			frameSize.x -= DEFAULT_FRAME_INDENT_LEFT;
-			move(DEFAULT_FRAME_INDENT_LEFT, 0);
-		}
-
-		scale.x = frameSize.x / (end.x - start.x);
-		scale.y = frameSize.y / (end.y - start.y);
-
-		frameShape.setSize(frameSize);
-		frameShape.setOutlineThickness(-1.f);
+		frameShape.setOutlineThickness(1.f);
+		frameShape.setFillColor(Color::Transparent);
 		frameShape.setOutlineColor(style.frameColor);
-		frameShape.setFillColor(sf::Color::Transparent);
+
+		areaShape.setOutlineThickness(1.f);
+		areaShape.setFillColor(Color(0x87ceeb40));
+		areaShape.setOutlineColor(Color(0x87ceebff));
+
+		recomputeFrame();
+
+		start = Values(-10, -10);
+		end = Values(10, 10);
+		scale = Values(
+			frameSize.x / (end.x - start.x),
+			frameSize.y / (end.y - start.y)
+		);
 
 		axis.init();
 		grid.init();
@@ -318,11 +444,6 @@ namespace Plotter
 
 	void Plot::recompute()
 	{
-		scale = Coords(
-			frameSize.x / (end.x - start.x),
-			frameSize.y / (end.y - start.y)
-		);
-
 		axis.recompute();
 		grid.recompute();
 		cursor.recompute();
@@ -330,11 +451,40 @@ namespace Plotter
 			graph.recompute();
 	}
 
+	Graph* Plot::nearestGraph()
+	{
+		if (graphs.empty())
+			return nullptr;
+
+		auto values = toValues(mouse);
+		int maxi = 0;
+		float maxr = abs(graphs[maxi].function(values.x) - values.y);
+
+		for (auto i = 1; i < graphs.size(); i++)
+		{
+			auto range = abs(graphs[i].function(values.x) - values.y);
+			if (range < maxr)
+			{
+				maxr = range;
+				maxi = i;
+			}
+		}
+
+		return &graphs[maxi];
+	}
+
+	void Plot::zoom(float delta)
+	{
+		float zoom = delta < 0 ? DEFAULT_ZOOM_VALUE : 1.f / DEFAULT_ZOOM_VALUE;
+		if (shift)	setBoundsX(zoom * start.x, zoom * end.x);
+		else		setBounds(zoom * start, zoom * end);
+	}
+
 	Coords Plot::toCoords(Values point) const
 	{
 		return Coords(
 			(point.x - start.x) * scale.x,
-			(point.y - start.y) * scale.y
+			-(point.y - end.y) * scale.y
 		);
 	}
 
@@ -342,7 +492,7 @@ namespace Plotter
 	{
 		return Values(
 			point.x / scale.x + start.x,
-			(point.y / scale.y + start.y)
+			-point.y / scale.y + end.y
 		);
 	}
 
@@ -359,8 +509,8 @@ namespace Plotter
 	Coords Plot::rangeCoords(Coords point) const
 	{
 		return Coords(
-			std::max(std::min(point.x - getPosition().x, frameSize.x), 0.f),
-			std::max(std::min(point.y - getPosition().y, frameSize.y), 0.f)
+			std::max(std::min(point.x, frameSize.x), 0.f),
+			std::max(std::min(point.y, frameSize.y), 0.f)
 		);
 	}
 
@@ -369,5 +519,14 @@ namespace Plotter
 		return rangeCoords(Coords(cx, cy));
 	}
 
-	
+	bool Plot::isInside(Coords point) const
+	{
+		return 0.f <= point.x && point.x <= frameSize.x
+			&& 0.f <= point.y && point.y <= frameSize.y;
+	}
+
+	bool Plot::isInside(float cx, float cy) const
+	{
+		return isInside(Coords(cx, cy));
+	}
 }

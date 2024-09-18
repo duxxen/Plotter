@@ -15,17 +15,21 @@ namespace Plotter
 		{
 			bool	centered;
 			Color	color;
+			sf::String	nameX;
+			sf::String	nameY;
 
 			AxisStyle(
 				Color color = Color::White,
-				bool centered = true
+				bool centered = false,
+				sf::String nameX = "Axis X",
+				sf::String nameY = "Axis Y"
 			);
 		}
 		DEFAULT_AXIS_STYLE;
 
 	private:
 
-		Axis(Plot* layout, AxisStyle style = DEFAULT_AXIS_STYLE);
+		Axis(Plot* layout, AxisStyle style = DEFAULT_AXIS_STYLE, Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE);
 
 		void onStyleChanged(AxisStyle nstyle);
 
@@ -37,6 +41,8 @@ namespace Plotter
 
 		Coords			intersection;
 
+		Title			nameX;
+		Title			nameY;
 		sf::VertexArray lines;
 	};
 }

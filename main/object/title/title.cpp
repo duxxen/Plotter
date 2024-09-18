@@ -14,13 +14,14 @@ namespace Plotter
 	}
 
 	Title::Title(Plot* layout, TitleStyle style) :
-		Object	{ layout }
+		Object	{ layout },
+		style	{ style }
 	{
 	}
 
-	void Title::setString(string string)
+	void Title::setString(sf::String string)
 	{
-		text.setString(string);
+		text.setString(sf::String::fromUtf16(string.begin(), string.end()));
 		size.x = text.getLocalBounds().width;
 		size.y = text.getLocalBounds().height;
 	}
