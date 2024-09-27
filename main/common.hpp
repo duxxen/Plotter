@@ -29,6 +29,8 @@ namespace Plotter
 		Color::Yellow
 	};
 
+	static inline const Values		DEFAULT_PLOT_START			{ -10, -10 };
+	static inline const Values		DEFAULT_PLOT_END			{ 10, 10 };
 	static inline const float		DEFAULT_ZOOM_VALUE			{ 1.5f };
 	static inline const uint16_t	DEFAULT_WIN_WIDTH			{ 640U };
 	static inline const uint16_t	DEFAULT_WIN_HEIGHT			{ 480U };

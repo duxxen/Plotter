@@ -264,7 +264,10 @@ namespace Plotter
 					rebounding = false;
 					areaShape.setSize(Coords(0, 0));
 					if (pressPosition != mouse)
-						setBounds(toValues(pressPosition.x, mouse.y), toValues(mouse.x, pressPosition.y));
+						setBounds(
+							toValues(std::min(pressPosition.x, mouse.x), std::max(pressPosition.y, mouse.y)),
+							toValues(std::max(pressPosition.x, mouse.x), std::min(pressPosition.y, mouse.y))
+						);
 					break;
 
 				case sf::Mouse::Right:
@@ -286,6 +289,9 @@ namespace Plotter
 				break;
 
 			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::Key::R)
+					setBounds(DEFAULT_PLOT_START, DEFAULT_PLOT_END);
+
 				shift = event.key.shift;
 				break;
 
@@ -428,10 +434,11 @@ namespace Plotter
 		areaShape.setFillColor(Color(0x87ceeb40));
 		areaShape.setOutlineColor(Color(0x87ceebff));
 
+		axis.intersection = style.windowSize / 2.f;
 		recomputeFrame();
 
-		start = Values(-10, -10);
-		end = Values(10, 10);
+		start = DEFAULT_PLOT_START;
+		end = DEFAULT_PLOT_END;
 		scale = Values(
 			frameSize.x / (end.x - start.x),
 			frameSize.y / (end.y - start.y)

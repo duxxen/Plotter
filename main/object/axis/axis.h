@@ -20,7 +20,7 @@ namespace Plotter
 
 			AxisStyle(
 				Color color = Color::White,
-				bool centered = false,
+				bool centered = true,
 				sf::String nameX = "Axis X",
 				sf::String nameY = "Axis Y"
 			);

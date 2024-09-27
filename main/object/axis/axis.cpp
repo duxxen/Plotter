@@ -70,6 +70,13 @@ namespace Plotter
 			titlePosition.x -= DEFAULT_FRAME_INDENT_LEFT;
 			titlePosition.y += 2.f * DEFAULT_TEXT_INDENT;
 		}
+		else
+		{
+			if (intersection.x <= DEFAULT_WIN_INDENT)
+				titlePosition.x -= DEFAULT_FRAME_INDENT_LEFT;
+			if (intersection.y >= layout->frameSize.y - DEFAULT_WIN_INDENT)
+				titlePosition.y += 2.f * DEFAULT_TEXT_INDENT;
+		}
 
 		lines[0] = sf::Vertex(Coords(intersection.x, 0), style.color);
 		lines[1] = sf::Vertex(Coords(intersection.x, layout->frameSize.y), style.color);

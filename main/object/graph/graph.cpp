@@ -30,8 +30,9 @@ namespace Plotter
 
 
 		auto step = (end - start) / layout->style.pointCount;
-		for (auto x = start; x <= end; x += step)
+		for (auto i = 0; i < layout->style.pointCount; i++)
 		{
+			auto x = start + i * step;
 			auto point = Values(x, func(x));
 			points.push_back(point);
 
