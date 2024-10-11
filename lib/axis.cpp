@@ -49,4 +49,6 @@ void Axis::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(marksX, states);
 	target.draw(marksY, states);
+	for (auto& text : valuesX)
+		target.draw(text, states);
 }

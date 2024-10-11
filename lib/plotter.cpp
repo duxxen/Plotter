@@ -10,16 +10,16 @@ void Plotter::loadFont(std::string path)
 	for (auto& node : plots)
 	{
 		auto& [frame, plot] = node.second;
+		for (auto& text : plot.axis.valuesX)
+			text.setFont(font);
+		for (auto& text : plot.axis.valuesY)
+			text.setFont(font);
 	}
 }
 
 PlotterTuple& Plotter::plot()
 {
 	size_t newID = plots.size() + 1;
-	if (newID == 1)
-	{
-		loadFont("C:/Windows/Fonts/arial.ttf");
-	}
 
 	WindowFrame* newFrame = new WindowFrame(newID);
 	Plot* newPlot = new Plot(newFrame);
