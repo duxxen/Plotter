@@ -25,9 +25,17 @@ void Axis::recompute()
 		marksX[2 * x] = sf::Vertex(sf::Vector2f(aposition.x, aposition.y), sf::Color::Black);
 		marksX[2 * x + 1] = sf::Vertex(sf::Vector2f(aposition.x, aposition.y + mlength), sf::Color::Black);
 	}
+
+	for (auto y = 0; y <= layout->gridSpacing.y; y++)
+	{
+		auto aposition = sf::Vector2f(0.f, y * ainch.y) - foffset;
+		marksY[2 * y] = sf::Vertex(sf::Vector2f(aposition.x, aposition.y), sf::Color::Black);
+		marksY[2 * y + 1] = sf::Vertex(sf::Vector2f(aposition.x - mlength, aposition.y), sf::Color::Black);
+	}
 }
 
 void Axis::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	target.draw(marksX, states);
+	target.draw(marksY, states);
 }
