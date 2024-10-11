@@ -1,11 +1,26 @@
 #include "../include/plotter.h"
 
+sf::Font						Plotter::font;
 std::unique_ptr<PlotterTuple>	Plotter::current;
 std::map<size_t, PlotterTuple>	Plotter::plots;
+
+void Plotter::loadFont(std::string path)
+{
+	font.loadFromFile(path);
+	for (auto& node : plots)
+	{
+		auto& [frame, plot] = node.second;
+	}
+}
 
 PlotterTuple& Plotter::plot()
 {
 	size_t newID = plots.size() + 1;
+	if (newID == 1)
+	{
+		loadFont("C:/Windows/Fonts/arial.ttf");
+	}
+
 	WindowFrame* newFrame = new WindowFrame(newID);
 	Plot* newPlot = new Plot(newFrame);
 	auto [it, success] = plots.insert(std::make_pair(newID, PlotterTuple(*newFrame, *newPlot)));
@@ -15,6 +30,11 @@ PlotterTuple& Plotter::plot()
 
 	auto& [frame, plot] = it->second;
 	frame.plot.reset(newPlot);
+
+	for (auto& text : plot.axis.valuesX)
+		text.setFont(font);
+	for (auto& text : plot.axis.valuesY)
+		text.setFont(font);
 
 	current = std::make_unique<PlotterTuple>(it->second);
 	return it->second;
