@@ -1,56 +1,65 @@
 #include "../include/plotter.h"
 
-sf::Font						Plotter::font;
-std::unique_ptr<PlotterTuple>	Plotter::current;
-std::map<size_t, PlotterTuple>	Plotter::plots;
+Plotter::Plotter()
+{
+	loadFont(DEFAULT_FONTS_FOLDER + DEFAULT_FONT_NAME);
+}
+
+Plotter::~Plotter()
+{
+	for (auto it = plotters.begin(); it != plotters.end(); it++)
+	{
+		auto& [window, plot] = it->second;
+		delete window;
+		delete plot;
+		it = plotters.erase(it);
+		if (it == plotters.end())
+			break;
+	}
+}
 
 void Plotter::loadFont(std::string path)
 {
 	font.loadFromFile(path);
-	for (auto& node : plots)
+	for (auto& node : plotters)
 	{
-		auto& [frame, plot] = node.second;
-		for (auto& text : plot.axis.valuesX)
-			text.setFont(font);
-		for (auto& text : plot.axis.valuesY)
-			text.setFont(font);
+		auto& [window, plot] = node.second;
 	}
 }
 
-PlotterTuple& Plotter::plot()
+PlotterTuple* Plotter::plot()
 {
-	size_t newID = plots.size() + 1;
-
-	WindowFrame* newFrame = new WindowFrame(newID);
-	Plot* newPlot = new Plot(newFrame);
-	auto [it, success] = plots.insert(std::make_pair(newID, PlotterTuple(*newFrame, *newPlot)));
-	
+	auto newID = plotters.size() + 1;
+	auto newWindow = new Window(newID);
+	auto newPlot = new Plot(newWindow);
+	auto [it, success] = plotters.insert(std::make_pair(newID, PlotterTuple(newWindow, newPlot)));
 	if (!success)
+	{
+		delete newWindow;
+		delete newPlot;
 		throw std::exception("Bad insertion!");
-
+	}
 	auto& [frame, plot] = it->second;
-	frame.plot.reset(newPlot);
-
-	for (auto& text : plot.axis.valuesX)
-		text.setFont(font);
-	for (auto& text : plot.axis.valuesY)
-		text.setFont(font);
-
-	current = std::make_unique<PlotterTuple>(it->second);
-	return it->second;
+	frame->plot = plot;
+	
+	return &it->second;
 }
 
 void Plotter::show()
 {
-	bool opened;
-	do
+	while (!plotters.empty())
 	{
-		opened = false;
-		for (auto& node : plots)
+		for (auto it = plotters.begin(); it != plotters.end(); it++)
 		{
-			auto& [frame, plot] = node.second;
-			opened |= frame.processEvents();
-			frame.show();
+			auto& [window, plot] = it->second;
+			auto opened = it->second.wptr->processEvents();
+			it->second.wptr->show();
+			if (opened == false)
+			{
+				it = plotters.erase(it);
+				if (it == plotters.end())
+					break;
+			}
 		}
-	} while (opened);
+	}
 }

@@ -1,19 +1,21 @@
 #pragma once
+#include "window.h"
 #include "plot.h"
-#include "window-frame.h"
 
-class Plotter
+static inline class Plotter
 {
 public:
 
-	static void loadFont(std::string path);
+	Plotter();
+	~Plotter();
 
-	static PlotterTuple& plot();
-	static void show();
+	void loadFont(std::string path);
+	PlotterTuple* plot();
+	void show();
 
 private:
 
-	static sf::Font							font;
-	static std::unique_ptr<PlotterTuple>	current;
-	static std::map<size_t, PlotterTuple>	plots;
-};
+	sf::Font						font;
+	std::map<size_t, PlotterTuple>	plotters;
+}
+plt;

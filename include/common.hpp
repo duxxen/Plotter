@@ -1,24 +1,30 @@
 #pragma once
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
-#include <sstream>
 
 class Axis;
 class Grid;
 class Plot;
-class WindowFrame;
-class Plotter;
+class Window;
 
-typedef std::shared_ptr<Plot>			PlotPointer;
-typedef std::shared_ptr<WindowFrame>	WindowFramePointer;
-typedef std::tuple<WindowFrame&, Plot&>	PlotterTuple;
-
-static inline std::string toString(float value, std::streamsize precision = 3)
+struct PlotterTuple
 {
-	std::stringstream ss;
-	std::string str;
-	ss.precision(precision);
-	ss << value;
-	ss >> str;
+	Window* wptr;
+	Plot*	pptr;
+};
 
-	return str;
-}
+//class Layout
+//{
+//public:
+//	Layout(Layout* layout = nullptr) : layout(layout) {}
+//	Layout* toLayout() { return layout; }
+//private:
+//	Layout* layout;
+//};
+
+static inline const float		DEFAULT_LOCATOR_MAJOR_LENGHT	{ 5.f };
+static inline const float		DEFAULT_LOCATOR_MINOR_LENGHT	{ 3.f };
+static inline const std::string	DEFAULT_FONTS_FOLDER			{ "C:/Windows/Fonts/" };
+static inline const std::string DEFAULT_FONT_NAME				{ "arial.ttf" };
+static inline const sf::Color	DEFAULT_BACKGROUND_COLOR		{ 255, 255, 255 };
