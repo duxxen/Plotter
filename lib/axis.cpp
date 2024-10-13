@@ -4,19 +4,24 @@
 Axis::Axis(Plot* layout, bool isX) :
 	layout		(layout),
 	horizontal	(isX),
-	orientation	(isX ? sf::Transform(1, 0, 1, 0, 1, 1, 0, 0, 1) : sf::Transform(0, 1, -1, 1, 1, 0, 0, 0, 1)),
-	locator		(this, 5, 5)
+	length		(1.f),
+	locator		(this, 5, 0)
 {
+	if (!horizontal)
+	{
+		setRotation(90);
+		setScale(1, -1);
+	}
 }
 
 void Axis::recompute()
 {
-	length = horizontal ? layout->frame.getSize().x : layout->frame.getSize().y;
+	length = horizontal ? layout->size.x : layout->size.y;
 	locator.recompute();
 }
 
 void Axis::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
-	states.transform *= orientation;
+	states.transform *= getTransform();
 	target.draw(locator, states);
 }

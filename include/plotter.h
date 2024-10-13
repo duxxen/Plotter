@@ -1,8 +1,10 @@
 #pragma once
 #include "window.h"
 #include "plot.h"
+#include "axis.h"
+#include "locator.h"
 
-static inline class Plotter
+extern class Plotter
 {
 public:
 
@@ -10,7 +12,7 @@ public:
 	~Plotter();
 
 	void loadFont(std::string path);
-	PlotterTuple* plot();
+	PlotterTuple& plot();
 	void show();
 
 private:

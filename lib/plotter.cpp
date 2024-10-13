@@ -1,8 +1,11 @@
 #include "../include/plotter.h"
 
+Plotter plt;
+
 Plotter::Plotter()
 {
-	loadFont(DEFAULT_FONTS_FOLDER + DEFAULT_FONT_NAME);
+	DEFAULT_FONT.loadFromFile(DEFAULT_FONTS_FOLDER + DEFAULT_FONT_NAME);
+	font = DEFAULT_FONT;
 }
 
 Plotter::~Plotter()
@@ -24,10 +27,14 @@ void Plotter::loadFont(std::string path)
 	for (auto& node : plotters)
 	{
 		auto& [window, plot] = node.second;
+		for (auto& label : plot->axisX.locator.majorLabels)
+			label.setFont(font);
+		for (auto& label : plot->axisX.locator.minorLabels)
+			label.setFont(font);
 	}
 }
 
-PlotterTuple* Plotter::plot()
+PlotterTuple& Plotter::plot()
 {
 	auto newID = plotters.size() + 1;
 	auto newWindow = new Window(newID);
@@ -42,7 +49,7 @@ PlotterTuple* Plotter::plot()
 	auto& [frame, plot] = it->second;
 	frame->plot = plot;
 	
-	return &it->second;
+	return it->second;
 }
 
 void Plotter::show()
