@@ -1,5 +1,5 @@
 #pragma once
-#include "axis.h"
+#include "../common.hpp"
 
 class Locator :
 	public PlotObject
@@ -7,6 +7,7 @@ class Locator :
 public:
 	Locator(Axis* layout, size_t majorCount = 5, size_t minorCount = 0);
 
+	void setColor(sf::Color color);
 	void setMajorCount(size_t count);
 	void setMinorCount(size_t count);
 

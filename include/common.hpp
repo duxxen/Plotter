@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "system/label.h"
 #include "system/plot-object.hpp"
 
 class Label;
