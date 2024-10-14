@@ -12,21 +12,15 @@ static inline const float DEFAULT_VALUES_END_X	{ 1.f };
 static inline const float DEFAULT_VALUES_END_Y	{ 1.f };
 
 class Plot :
-	public PlotObject, public sf::Transformable
+	public PlotObject
 {
+	friend class Plotter;
 public:
-	Plot(
-		Window* layout,
-		float aleft = DEFAULT_ADJUST_LEFT,
-		float atop = DEFAULT_ADJUST_TOP,
-		float aright = DEFAULT_ADJUST_RIGHT,
-		float abottom = DEFAULT_ADJUST_BOTTOM
-	);
 
 	Plot(
 		Window* layout,
-		sf::Vector2f aposlt = { DEFAULT_ADJUST_LEFT, DEFAULT_ADJUST_TOP },
-		sf::Vector2f aposrb = { DEFAULT_ADJUST_RIGHT, DEFAULT_ADJUST_BOTTOM }
+		sf::Vector2f aposlt,
+		sf::Vector2f aposrb
 	);
 
 	Plot(
@@ -43,10 +37,10 @@ public:
 
 	Plot(
 		Window* layout,
-		sf::Vector2f vbegin = { DEFAULT_VALUES_BEGIN_X, DEFAULT_VALUES_BEGIN_Y },
-		sf::Vector2f vend = { DEFAULT_VALUES_END_X, DEFAULT_VALUES_END_Y },
-		sf::Vector2f aposlt = { DEFAULT_ADJUST_LEFT, DEFAULT_ADJUST_TOP },
-		sf::Vector2f aposrb = { DEFAULT_ADJUST_RIGHT, DEFAULT_ADJUST_BOTTOM }
+		sf::Vector2f vbegin,
+		sf::Vector2f vend,
+		sf::Vector2f aposlt,
+		sf::Vector2f aposrb
 	);
 
 	void adjust(float aleft, float atop, float aright, float abottom);
@@ -62,16 +56,26 @@ public:
 	float toCoordsY(float vy) const;
 	sf::Vector2f toCoords(sf::Vector2f values) const;
 
-private:
+	void setAxisColor(sf::Color color);
+	void setBackgroundColor(sf::Color color);
+
+	void setSize(sf::Vector2f newsize);
+	sf::Vector2f getSize() const;
 
 	void recompute() override;
+
+	Axis	axisX;
+	Axis	axisY;
+private:
+
+	
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 	sf::Vector2f		size;
 	sf::VertexArray		frame;
 	sf::RectangleShape	background;
 
-	sf::Vector2f vbegin;
-	sf::Vector2f vend;
-	sf::Vector2f vscale;
+	sf::Vector2f		vbegin;
+	sf::Vector2f		vend;
+	sf::Vector2f		vscale;
 };

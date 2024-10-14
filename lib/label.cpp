@@ -14,6 +14,13 @@ Label::Label(const sf::String& string, unsigned characterSize) :
 	globalLabels.push_back(this);
 }
 
+Label::~Label()
+{
+	auto it = std::find(globalLabels.begin(), globalLabels.end(), this);
+	if (it != globalLabels.end())
+		globalLabels.erase(it);
+}
+
 void Label::setString(int value)
 {
 	char buf[256];

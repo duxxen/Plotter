@@ -9,6 +9,7 @@ class Label :
 {
 public:
 	Label(const sf::String& string = "", unsigned characterSize = 30U);
+	~Label();
 
 	void setString(int value);
 	void setString(float value);

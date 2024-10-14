@@ -4,6 +4,7 @@
 class Axis :
 	public PlotObject
 {
+	friend class Plotter;
 public:
 	enum Orientation
 	{
@@ -12,14 +13,20 @@ public:
 	};
 
 	Axis(Plot* layout, Orientation orientation, Label label = Label());
-	
-	Locator		locator;
-private:
+
+	void setColor(sf::Color color);
+
+	Orientation getOrientation() const;
+	float getLength() const;
 
 	void recompute() override;
+
+	Locator		locator;
+private:
+	
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 	Label		label;
 	float		length;
-	Orientation orientation;
+	Orientation	orientation;
 };

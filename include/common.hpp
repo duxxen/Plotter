@@ -1,20 +1,24 @@
 #pragma once
-#include <iostream>
-#include <SFML/Graphics.hpp>
 #include "system/label.h"
+#include "system/singleton.h"
 #include "system/plot-object.hpp"
 
 class Label;
 class Locator;
 class Axis;
-class Grid;
 class Plot;
 class Window;
 class Plotter;
 
 struct PlotterTuple
 {
-	Window* wptr;
-	Plot*	pptr;
+	Window*					wptr;
+	std::map<size_t, Plot*>	pptrs;
+
+	PlotterTuple(Window* wptr, Plot* pptr) :
+		wptr	(wptr),
+		pptrs	({ std::make_pair(1, pptr) })
+	{
+	}
 };
 
