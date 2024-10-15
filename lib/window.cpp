@@ -2,7 +2,6 @@
 #include "../include/plot/plot.h"
 
 Window::Window(size_t id, sf::Vector2f size, float dpi) :
-	Layout	(nullptr),
 	id		(id),
 	dpi		(dpi),
 	size	(size),

@@ -2,11 +2,9 @@
 #include "../include/plot/plot.h"
 #include "../include/plotter.h"
 
-Axis::Axis(Plot* layout, Orientation orientation, Label label) :
-	PlotObject	(layout),
-	locator		(this),
+Axis::Axis(Orientation orientation, Label label) :
+	locator		(orientation),
 	label		(label),
-	length		(0.f),
 	orientation	(orientation)
 {
 }
@@ -16,20 +14,8 @@ void Axis::setColor(sf::Color color)
 	Plotter::setAxisColor(color);
 }
 
-Axis::Orientation Axis::getOrientation() const
-{
-	return orientation;
-}
-
-float Axis::getLength() const
-{
-	return length;
-}
-
 void Axis::recompute()
 {
-	auto plot = static_cast<Plot*>(toLayout());
-	length = orientation == HORIZONTAL ? plot->getSize().x : plot->getSize().y;
 	locator.recompute();
 }
 
