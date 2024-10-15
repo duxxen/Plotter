@@ -6,7 +6,7 @@ class Locator :
 {
 	friend class Plotter;
 public:
-	Locator(Axis* layout, size_t majorCount = 5, size_t minorCount = 0);
+	Locator(Orientation orientation, size_t majorCount = 3, size_t minorCount = 2);
 
 	void setColor(sf::Color color);
 	void setMajorCount(size_t count);
@@ -23,6 +23,7 @@ private:
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+	Orientation			orientation;
 	bool				gridEnable;
 	sf::VertexArray		grid;
 	size_t				majorCount;

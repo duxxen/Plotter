@@ -71,6 +71,7 @@ private:
 	
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+	const Window*		layout;
 	sf::Vector2f		size;
 	sf::VertexArray		frame;
 	sf::RectangleShape	background;

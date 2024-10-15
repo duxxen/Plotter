@@ -1,21 +1,16 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
-class Layout
+enum Orientation
 {
-public:
-	Layout(Layout* layout) : layout(layout) {}
-	Layout* toLayout() { return layout; }
-private:
-	Layout* layout;
+	HORIZONTAL,
+	VERTICAL
 };
 
 class PlotObject :
 	public sf::Transformable,
-	public sf::Drawable, 
-	public Layout
+	public sf::Drawable
 {
 public:
-	PlotObject(Layout* layout) : Layout(layout) {}
 	virtual void recompute() = 0;
 };

@@ -1,8 +1,7 @@
 #pragma once
 #include "common.hpp"
 
-class Window :
-	public Layout
+class Window
 {
 	friend class Plotter;
 public:
