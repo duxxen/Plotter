@@ -2,13 +2,15 @@
 #include "../include/plotter.h"
 
 Locator::Locator(Orientation orientation, size_t majorCount, size_t minorCount) :
-	gridEnable	(false),
+	orientation	(orientation),
+	gridEnabled	(true),
 	majorCount	(majorCount),
 	minorCount	(minorCount),
-	majorLabels	(2 * majorCount, Label()),
+	grid		(sf::Lines, 2 * (majorCount - 1)),
 	majores		(sf::Lines, 2 * majorCount),
-	minorLabels	(2 * majorCount * minorCount, Label()),
-	minores		(sf::Lines, 2 * (majorCount - 1) * minorCount)
+	minores		(sf::Lines, 2 * (majorCount - 1) * minorCount),
+	majorLabels	(2 * majorCount, Label()),
+	minorLabels	(2 * majorCount * minorCount, Label())
 {
 }
 
@@ -38,49 +40,56 @@ size_t Locator::getMinorCount() const
 	return minorCount;
 }
 
-void Locator::recomputeMajores()
-{
-	majores.resize(2 * majorCount);
-	majorLabels.resize(majorCount, Label());
-
-	auto step = 1.f / (majorCount - 1);
-	auto mlength = -0.04f;
-	for (auto i = 0; i < majorCount; i++)
-	{
-		auto mposition = sf::Vector2f(0, 0);
-		orientation == HORIZONTAL ? mposition.x = step * i : mposition.y = step * i;
-		orientation == HORIZONTAL ? mposition.y = 0 : mposition.x = 0;
-		majores[2 * i] = sf::Vertex(mposition, sf::Color::Black);
-		orientation == HORIZONTAL ? mposition.y = mlength : mposition.x = mlength;
-		majores[2 * i + 1] = sf::Vertex(mposition, sf::Color::Black);
-	}
-}
-
-void Locator::recomputeMinores()
+void Locator::recompute()
 {
 	auto m = majorCount - 1;
 	auto n = minorCount;
+	majores.resize(2 * majorCount);
 	minores.resize(2 * m * n);
-	minorLabels.resize(m * n, Label());
+	majorLabels.resize(majorCount, Label());
+	minorLabels.resize(m * n);
 
-	auto step = 1.f / (m * (n + 1));
-	for (auto i = 0; i < m; i++)
+	auto stepmjv = 1.f / m;
+	auto stepmnv = 1.f / (m * (n + 1));
+	auto lengthmjv = -0.04f;
+	auto lengthmnv = -0.02f;
+
+	auto stepmj = orientation == HORIZONTAL ? sf::Vector2f(stepmjv, 0) : sf::Vector2f(0, stepmjv);
+	auto stepmn = orientation == HORIZONTAL ? sf::Vector2f(stepmnv, 0) : sf::Vector2f(0, stepmnv);
+	auto lengthmj = orientation == HORIZONTAL ? sf::Vector2f(0, lengthmjv) : sf::Vector2f(lengthmjv, 0);
+	auto lengthmn = orientation == HORIZONTAL ? sf::Vector2f(0, lengthmnv) : sf::Vector2f(lengthmnv, 0);
+	auto lengthg = orientation == HORIZONTAL ? sf::Vector2f(0, 1) : sf::Vector2f(1, 0);
+
+	auto pos0 = (float)m * stepmj;
+	auto pos1 = pos0 + lengthmj;
+	majores[2 * m] = sf::Vertex(pos0, sf::Color::Black);
+	majores[2 * m + 1] = sf::Vertex(pos1, sf::Color::Black);
+	for (int i = m - 1; i >= 0; i--)
 	{
-		for (auto j = 0; j < n; j++)
-		{
-			auto index = 2 * (n * i + j);
-			auto next = 2 * (n * i + j) + 1;
-			auto mposition = majores[2 * i].position.x + step * (j + 1);
-			minores[index] = sf::Vertex(sf::Vector2f(mposition, 0), sf::Color::Black);
-			minores[next] = sf::Vertex(sf::Vector2f(mposition, -0.02f), sf::Color::Black);
-		}
-	}
-}
+		pos0 = majores[2 * (i + 1)].position - stepmj;
+		pos1 = pos0 + lengthmj;
+		majores[2 * i] = sf::Vertex(pos0, sf::Color::Black);
+		majores[2 * i + 1] = sf::Vertex(pos1, sf::Color::Black);
 
-void Locator::recompute()
-{
-	recomputeMajores();
-	recomputeMinores();
+		auto posg0 = pos0;
+		auto posg1 = posg0 + lengthg;
+
+		pos0 = majores[2 * (i + 1)].position - stepmn;
+		pos1 = pos0 + lengthmn;
+		minores[2 * n * (i + 1) - 2] = sf::Vertex(pos0, sf::Color::Black);
+		minores[2 * n * (i + 1) - 1] = sf::Vertex(pos1, sf::Color::Black);
+		for (int j = n - 2; j >= 0; j--)
+		{
+			pos0 = pos0 - stepmn;
+			pos1 = pos0 + lengthmn;
+			minores[2 * (n * i + j)] = sf::Vertex(pos0, sf::Color::Black);
+			minores[2 * (n * i + j) + 1] = sf::Vertex(pos1, sf::Color::Black);
+		}
+
+		if (i == 0) continue;
+		grid[2 * i] = sf::Vertex(posg0, sf::Color(0x808080ff));
+		grid[2 * i + 1] = sf::Vertex(posg1, sf::Color(0x808080ff));
+	}
 }
 
 void Locator::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -89,4 +98,7 @@ void Locator::draw(sf::RenderTarget& target, sf::RenderStates states) const
 	//for (auto i = 0; i < majorCount; i++)
 		//target.draw(majorLabels[i], states);
 	target.draw(minores, states);
+
+	if (gridEnabled)	
+		target.draw(grid, states);
 }

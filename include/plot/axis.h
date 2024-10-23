@@ -11,8 +11,6 @@ public:
 
 	void setColor(sf::Color color);
 
-	Orientation getOrientation() const;
-
 	void recompute() override;
 
 	Locator		locator;
