@@ -40,6 +40,43 @@ namespace Plotter
 	}
 
 	Plot::Plot(
+		vector<Values> vect,
+		PlotStyle pstyle,
+		Axis::AxisStyle astyle,
+		Grid::GridStyle gstyle,
+		Cursor::CursorStyle cstyle,
+		Title::TitleStyle tstyle)
+		:
+		Object{ nullptr },
+		axis{ this, astyle, tstyle },
+		grid{ this, gstyle, tstyle },
+		cursor{ this, cstyle, tstyle },
+		style{ pstyle }
+	{
+		init();
+		plot(vect);
+	}
+
+	Plot::Plot(
+		vector<float> vectx, 
+		vector<float> vecty, 
+		PlotStyle pstyle, 
+		Axis::AxisStyle astyle, 
+		Grid::GridStyle gstyle, 
+		Cursor::CursorStyle cstyle, 
+		Title::TitleStyle tstyle)
+		:
+		Object{ nullptr },
+		axis{ this, astyle, tstyle },
+		grid{ this, gstyle, tstyle },
+		cursor{ this, cstyle, tstyle },
+		style{ pstyle }
+	{
+		init();
+		plot(vectx, vecty);
+	}
+
+	Plot::Plot(
 		PlotStyle pstyle, 
 		Axis::AxisStyle astyle,
 		Grid::GridStyle gstyle,
@@ -184,7 +221,7 @@ namespace Plotter
 	void Plot::plot(size_t index, Func func, float start, float end)
 	{
 		if (graphs.empty() || index >= graphs.size())
-			throw - 1;
+			throw -1;
 
 		graphs[index].graph(func, start, end);
 
@@ -196,6 +233,71 @@ namespace Plotter
 		}
 
 		setBoundsX(start, end);
+	}
+
+	void Plot::plot(vector<float> xdata, vector<float> ydata)
+	{
+		if (ydata.size() != xdata.size())
+			throw - 2;
+
+		plot(ydata, xdata, Graph::GraphStyle(
+			DEFAULT_COLORS_ARRAY[graphs.size() % DEFAULT_COLORS_SIZE],
+			Graph::DEFAULT_GRAPH_STYLE.flags,
+			Graph::DEFAULT_GRAPH_STYLE.transparency
+		));
+	}
+
+	void Plot::plot(vector<float> xdata, vector<float> ydata, Graph::GraphStyle style)
+	{
+		if (ydata.size() != xdata.size())
+			throw - 2;
+
+		auto index = graphs.size();
+		graphs.push_back(Graph(this, style));
+		
+		plot(index, ydata, xdata);
+	}
+
+	void Plot::plot(size_t index, vector<float> xdata, vector<float> ydata)
+	{
+		if (ydata.size() != xdata.size())
+			throw -2;
+
+		if (graphs.empty() || index >= graphs.size())
+			throw -1;
+
+		vector<Values> data(ydata.size());
+		for (int i = 0; i < data.size(); i++)
+			data[i] = Values(xdata[i], ydata[i]);
+
+		graphs[index].graph(data);
+		setBoundsX(xdata.front(), xdata.back());
+	}
+
+	void Plot::plot(vector<Values> data)
+	{
+		plot(data, Graph::GraphStyle(
+			DEFAULT_COLORS_ARRAY[graphs.size() % DEFAULT_COLORS_SIZE],
+			Graph::DEFAULT_GRAPH_STYLE.flags,
+			Graph::DEFAULT_GRAPH_STYLE.transparency
+		));
+	}
+
+	void Plot::plot(vector<Values> data, Graph::GraphStyle style)
+	{
+		auto index = graphs.size();
+		graphs.push_back(Graph(this, style));
+
+		plot(index, data);
+	}
+
+	void Plot::plot(size_t index, vector<Values> data)
+	{
+		if (graphs.empty() || index >= graphs.size())
+			throw - 1;
+
+		graphs[index].graph(data);
+		setBoundsX(data.front().x, data.back().x);
 	}
 
 	bool Plot::processEvents()

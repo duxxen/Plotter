@@ -47,6 +47,25 @@ namespace Plotter
 		);
 
 		Plot(
+			vector<Values> vect,
+			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
+			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
+			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
+			Cursor::CursorStyle cstyle = Cursor::DEFAULT_CURSOR_STYLE,
+			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
+		);
+
+		Plot(
+			vector<float> vectx,
+			vector<float> vecty,
+			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
+			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
+			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
+			Cursor::CursorStyle cstyle = Cursor::DEFAULT_CURSOR_STYLE,
+			Title::TitleStyle tstyle = Title::DEFAULT_TITLE_STYLE
+		);
+
+		Plot(
 			PlotStyle pstyle = DEFAULT_PLOT_STYLE,
 			Axis::AxisStyle astyle = Axis::DEFAULT_AXIS_STYLE,
 			Grid::GridStyle gstyle = Grid::DEFAULT_GRID_STYLE,
@@ -80,6 +99,14 @@ namespace Plotter
 		void plot(Func func, float start, float end);
 		void plot(Func func, float start, float end, Graph::GraphStyle style);
 		void plot(size_t index, Func func, float start, float end);
+
+		void plot(vector<float> xdata, vector<float> ydata);
+		void plot(vector<float> xdata, vector<float> ydata, Graph::GraphStyle style);
+		void plot(size_t index, vector<float> xdata, vector<float> ydata);
+
+		void plot(vector<Values> data);
+		void plot(vector<Values> data, Graph::GraphStyle style);
+		void plot(size_t index, vector<Values> data);
 
 		// -------------------------------------- WINDOW FUNCTIONS ------------------------------------------
 
@@ -142,7 +169,7 @@ namespace Plotter
 		bool						shift;
 
 		bool						grabbed;
-		bool						rebounding;
+		bool						rebounding{ false };
 		bool						tracing;
 		Coords						pressPosition;
 
