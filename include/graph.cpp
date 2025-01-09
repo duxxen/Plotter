@@ -13,7 +13,7 @@ Graph::Graph(uint32_t width, uint32_t height) :
 	size = winSize - offset - margin;
 	axis.reset(new Axis(*this, sf::Color::White));
 	grid.reset(new Grid(*this, DEFAULT_GRID_COUNT, sf::Color::White));
-	cursor.reset(new Cursor(*this, sf::Vector2f(0, 0), sf::Color::White));
+	cursor.reset(new Cursor(*this, offset, sf::Color::White));
 
 	vscale.x = size.x / (vend.x - vbegin.x);
 	vscale.y = size.y / (vend.y - vbegin.y);
@@ -115,7 +115,41 @@ void Graph::setWindowSize(const sf::Vector2f& newsize)
 	recomputeFrame();
 }
 
-void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const sf::Color& color, const std::string& name)
+void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float lineThickness, LineStyle style, const sf::Color& color, const std::string& name)
+{
+	onSeriesAppend(valuesX, valuesY);
+	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<LineArtist>(LineArtist(style, lineThickness)), color, name));
+}
+
+void Graph::bar(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float barWidth, const sf::Color& color, const std::string& name)
+{
+	onSeriesAppend(valuesX, valuesY);
+	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<BarArtist>(BarArtist(barWidth)), color, name));
+}
+
+void Graph::scatter(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float dotRadius, const sf::Color& color, const std::string& name)
+{
+	onSeriesAppend(valuesX, valuesY);
+	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<ScatterArtist>(ScatterArtist(dotRadius)), color, name));
+}
+
+void Graph::init()
+{
+	if (!window)
+		window.reset(new sf::RenderWindow(sf::VideoMode(winSize.x, winSize.y), ""));
+}
+
+bool Graph::show()
+{
+	bool opened = window->isOpen();
+	if (opened) {
+		opened = processEvents();
+		if (opened) render();
+	}
+	return opened;
+}
+
+void Graph::onSeriesAppend(const std::vector<float>& valuesX, const std::vector<float>& valuesY)
 {
 	auto [minitX, maxitX] = std::minmax_element(valuesX.begin(), valuesX.end());
 	auto [minitY, maxitY] = std::minmax_element(valuesY.begin(), valuesY.end());
@@ -123,7 +157,7 @@ void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& va
 	float maxvX = (*maxitX) != 0 ? (*maxitX) + std::abs(*maxitX) * DEFAULT_VALUES_MARGIN_PERCENTAGE : +1.f;
 	float minvY = (*minitY) != 0 ? (*minitY) - std::abs(*minitY) * DEFAULT_VALUES_MARGIN_PERCENTAGE : -1.f;
 	float maxvY = (*maxitY) != 0 ? (*maxitY) + std::abs(*maxitY) * DEFAULT_VALUES_MARGIN_PERCENTAGE : +1.f;
-	
+
 	if (!series.empty())
 	{
 		auto newBegin = sf::Vector2f(
@@ -138,21 +172,6 @@ void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& va
 			setBounds(newBegin, newEnd);
 	}
 	else setBounds(minvX, minvY, maxvX, maxvY);
-
-	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<LineArtist>(LineArtist()), color, name));
-}
-
-bool Graph::show()
-{
-	if (window == nullptr && opened) {
-		window.reset(new sf::RenderWindow(sf::VideoMode(winSize.x, winSize.y), "Graph"));
-	}
-
-	if (opened) {
-		opened = processEvents();
-		render();
-	}
-	return opened;
 }
 
 void Graph::recomputeFrame()
@@ -173,16 +192,16 @@ bool Graph::processEvents()
 	sf::Event event;
 	while (window->pollEvent(event))
 	{
-		if (event.type == sf::Event::Closed)
-		{
+		if (event.type == sf::Event::Closed) {
 			window->close();
 			window.reset();
 			return false;
 		}
-		if (event.type == event.MouseMoved)
-		{
-			if (isInside(event.mouseMove.x, event.mouseMove.y))
-				cursor->setPosition(event.mouseMove.x, event.mouseMove.y);
+		if (event.type == sf::Event::MouseMoved) {
+			cursor->setPosition(
+				std::min(std::max(offset.x, (float)event.mouseMove.x), size.x + offset.x),
+				std::min(std::max(offset.y, (float)event.mouseMove.y), size.y + offset.y)
+			);
 		}
 	}
 	return true;
@@ -191,10 +210,13 @@ bool Graph::processEvents()
 void Graph::render()
 {
 	window->clear();
-	axis->draw(*window);
-	//grid->draw(*window);
-	cursor->draw(*window);
-	for (const auto& data : series)
-		data->draw(*window, *this);
+
+	if (showGraph)
+		for (const auto& data : series)
+			data->draw(*window, *this);
+
+	if (showAxis)   axis->draw(*window);
+	if (showGrid)   grid->draw(*window);
+	if (showCursor) cursor->draw(*window);
 	window->display();
 }

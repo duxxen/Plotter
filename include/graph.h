@@ -48,20 +48,45 @@ public:
 	void plot(
 		const std::vector<float>& valuesX,
 		const std::vector<float>& valuesY,
+		float lineThickness = 2.0f,
+		LineStyle style = LineStyle::Solid,
 		const sf::Color& color = sf::Color::Red,
 		const std::string& name = ""
 	);
 
+	void bar(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		float barWidth = 0.5f,
+		const sf::Color& color = sf::Color::Red,
+		const std::string& name = ""
+	);
+
+	void scatter(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		float dotRadius = 5.0f,
+		const sf::Color& color = sf::Color::Red,
+		const std::string& name = ""
+	);
+
+	void init();
 	bool show();
 
+	bool showGrid = true;
+	bool showAxis = true;
+	bool showGraph = true;
+	bool showCursor = true;
+
 private:
+
+	void onSeriesAppend(const std::vector<float>& valuesX, const std::vector<float>& valuesY);
 
 	void recomputeFrame();
 	void recomputeScale();
 	bool processEvents();
 	void render();
 
-	bool opened = true;
 	std::unique_ptr<sf::RenderWindow> window;
 	sf::Vector2f winSize;
 	sf::Vector2f size;
