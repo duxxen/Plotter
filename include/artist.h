@@ -1,7 +1,5 @@
 #pragma once
-#include <assert.h>
-#include <SFML/Graphics.hpp>
-#include "mathex.hpp"
+#include "common.hpp"
 
 class Graph;
 

@@ -1,28 +1,16 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include "axis.h"
 #include "grid.h"
 #include "series.h"
 #include "cursor.h"
-
-#define DEFAULT_WIN_WIDTH  800U
-#define DEFAULT_WIN_HEIGHT 600U
-#define DEFAULT_GRAPH_OFFSET { 30.f, 20.f }
-#define DEFAULT_GRAPH_MARGIN { 20.f, 30.f }
-#define DEFAULT_GRID_COUNT { 10, 10 }
-
-#define DEFAULT_VALUES_MARGIN_PERCENTAGE 0.1f
+#include "legend.h"
 
 class Graph
 {
 public:
+	Graph(uint16_t width = DEFAULT_WIN_WIDTH, uint16_t height = DEFAULT_WIN_HEIGHT);
 
-	const std::vector<sf::Color> colors{
-		sf::Color(0xff0000ff),	// red
-		sf::Color(0x00ff00ff)	// blue
-	};
-
-	Graph(uint32_t width = DEFAULT_WIN_WIDTH, uint32_t height = DEFAULT_WIN_HEIGHT);
+	void changeTheme(bool lightTheme);
 
 	sf::Vector2f toPixels(float vx, float vy) const;
 	sf::Vector2f toValues(float px, float py) const;
@@ -45,29 +33,54 @@ public:
 	const sf::Vector2f& getWindowSize() const;
 	void setWindowSize(const sf::Vector2f& newsize);
 
+	const sf::Font& getFont() const;
+	void loadFont(const std::string& path);
+
 	void plot(
 		const std::vector<float>& valuesX,
 		const std::vector<float>& valuesY,
-		float lineThickness = 2.0f,
+		const std::string& name = "",
 		LineStyle style = LineStyle::Solid,
-		const sf::Color& color = sf::Color::Red,
-		const std::string& name = ""
+		float lineThickness = 2.0f
+	);
+
+	void plot(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		const std::string& name,
+		const sf::Color& color,
+		LineStyle style = LineStyle::Solid,
+		float lineThickness = 2.0f
 	);
 
 	void bar(
 		const std::vector<float>& valuesX,
 		const std::vector<float>& valuesY,
-		float barWidth = 0.5f,
-		const sf::Color& color = sf::Color::Red,
-		const std::string& name = ""
+		const std::string& name = "",
+		float barWidth = 0.5f
+	);
+
+	void bar(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		const std::string& name,
+		const sf::Color& color,
+		float barWidth = 0.5f
 	);
 
 	void scatter(
 		const std::vector<float>& valuesX,
 		const std::vector<float>& valuesY,
-		float dotRadius = 5.0f,
-		const sf::Color& color = sf::Color::Red,
-		const std::string& name = ""
+		const std::string& name = "",
+		float dotRadius = 5.0f
+	);
+
+	void scatter(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		const std::string& name,
+		const sf::Color& color,
+		float dotRadius = 5.0f
 	);
 
 	void init();
@@ -77,15 +90,24 @@ public:
 	bool showAxis = true;
 	bool showGraph = true;
 	bool showCursor = true;
+	bool showLegend = true;
 
 private:
 
-	void onSeriesAppend(const std::vector<float>& valuesX, const std::vector<float>& valuesY);
+	void onSeriesAppend(
+		const std::vector<float>& valuesX,
+		const std::vector<float>& valuesY,
+		const sf::Color& color,
+		const std::string& name
+	);
 
 	void recomputeFrame();
 	void recomputeScale();
 	bool processEvents();
 	void render();
+
+	sf::Font font;
+	sf::Color backgroundColor;
 
 	std::unique_ptr<sf::RenderWindow> window;
 	sf::Vector2f winSize;
@@ -100,5 +122,6 @@ private:
 	std::unique_ptr<Grid> grid;
 	std::unique_ptr<Axis> axis;
 	std::unique_ptr<Cursor> cursor;
+	std::unique_ptr<Legend> legend;
 	std::vector<std::unique_ptr<Series>> series;
 };

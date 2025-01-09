@@ -1,6 +1,6 @@
-#define USE_MATH_DEFINES_
-#include <cmath>
+#pragma once
 #include <SFML/System.hpp>
+#include <cmath>
 
 namespace sf
 {

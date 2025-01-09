@@ -1,6 +1,6 @@
 #include "graph.h"
 
-Graph::Graph(uint32_t width, uint32_t height) :
+Graph::Graph(uint16_t width, uint16_t height) :
 	winSize	(width, height),
 	offset	(DEFAULT_GRAPH_OFFSET),
 	margin	(DEFAULT_GRAPH_MARGIN),
@@ -9,14 +9,36 @@ Graph::Graph(uint32_t width, uint32_t height) :
 	window	(nullptr)
 {
 	series.reserve(10);
+	backgroundColor = DEFAULT_COLORS.at("black");
 
 	size = winSize - offset - margin;
-	axis.reset(new Axis(*this, sf::Color::White));
-	grid.reset(new Grid(*this, DEFAULT_GRID_COUNT, sf::Color::White));
-	cursor.reset(new Cursor(*this, offset, sf::Color::White));
+	axis.reset(new Axis(*this, DEFAULT_COLORS.at("white")));
+	grid.reset(new Grid(*this, DEFAULT_GRID_COUNT, DEFAULT_COLORS.at("dimgray")));
+	cursor.reset(new Cursor(*this, offset, DEFAULT_COLORS.at("silver")));
+	legend.reset(new Legend(*this, offset + DEFAULT_LEGEND_MARGIN, DEFAULT_COLORS.at("dimgray"), DEFAULT_COLORS.at("white")));
 
 	vscale.x = size.x / (vend.x - vbegin.x);
 	vscale.y = size.y / (vend.y - vbegin.y);
+}
+
+void Graph::changeTheme(bool lightTheme)
+{
+	if (lightTheme) {
+		backgroundColor = DEFAULT_COLORS.at("white");
+		axis->setColor(DEFAULT_COLORS.at("black"));
+		grid->setColor(DEFAULT_COLORS.at("silver"));
+		cursor->setColor(DEFAULT_COLORS.at("slategray"));
+		legend->backgroundColor = DEFAULT_COLORS.at("aliceblue");
+		legend->frameColor = DEFAULT_COLORS.at("black");
+	}
+	else {
+		backgroundColor = DEFAULT_COLORS.at("aliceblue");
+		axis->setColor(DEFAULT_COLORS.at("black"));
+		grid->setColor(DEFAULT_COLORS.at("dimgray"));
+		cursor->setColor(DEFAULT_COLORS.at("silver"));
+		legend->backgroundColor = DEFAULT_COLORS.at("silver");
+		legend->frameColor = DEFAULT_COLORS.at("dimgray");
+	}
 }
 
 sf::Vector2f Graph::toPixels(float vx, float vy) const
@@ -115,21 +137,52 @@ void Graph::setWindowSize(const sf::Vector2f& newsize)
 	recomputeFrame();
 }
 
-void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float lineThickness, LineStyle style, const sf::Color& color, const std::string& name)
+const sf::Font& Graph::getFont() const
 {
-	onSeriesAppend(valuesX, valuesY);
+	return font;
+}
+
+void Graph::loadFont(const std::string& path)
+{
+	font.loadFromFile(path);
+}
+
+void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, LineStyle style, float lineThickness)
+{
+	auto label = name.empty() ? "Graph " + std::to_string(series.size()) : name;
+	auto color = DEFAULT_COLORS.at(DEFAULT_GRAPH_COLORS_STR[series.size() % DEFAULT_GRAPH_COLORS_STR.size()]);
+	plot(valuesX, valuesY, label, color, style, lineThickness);
+}
+
+void Graph::plot(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, const sf::Color& color, LineStyle style, float lineThickness)
+{
+	onSeriesAppend(valuesX, valuesY, color, name);
 	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<LineArtist>(LineArtist(style, lineThickness)), color, name));
 }
 
-void Graph::bar(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float barWidth, const sf::Color& color, const std::string& name)
+void Graph::bar(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, float barWidth)
 {
-	onSeriesAppend(valuesX, valuesY);
+	auto label = name.empty() ? "Graph " + std::to_string(series.size()) : name;
+	auto color = DEFAULT_COLORS.at(DEFAULT_GRAPH_COLORS_STR[series.size() % DEFAULT_GRAPH_COLORS_STR.size()]);
+	bar(valuesX, valuesY, label, color, barWidth);
+}
+
+void Graph::bar(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, const sf::Color& color, float barWidth)
+{
+	onSeriesAppend(valuesX, valuesY, color, name);
 	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<BarArtist>(BarArtist(barWidth)), color, name));
 }
 
-void Graph::scatter(const std::vector<float>& valuesX, const std::vector<float>& valuesY, float dotRadius, const sf::Color& color, const std::string& name)
+void Graph::scatter(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, float dotRadius)
 {
-	onSeriesAppend(valuesX, valuesY);
+	auto label = name.empty() ? "Graph " + std::to_string(series.size()) : name;
+	auto color = DEFAULT_COLORS.at(DEFAULT_GRAPH_COLORS_STR[series.size() % DEFAULT_GRAPH_COLORS_STR.size()]);
+	scatter(valuesX, valuesY, label, color, dotRadius);
+}
+
+void Graph::scatter(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const std::string& name, const sf::Color& color, float dotRadius)
+{
+	onSeriesAppend(valuesX, valuesY, color, name);
 	series.emplace_back(new Series(valuesX, valuesY, std::make_unique<ScatterArtist>(ScatterArtist(dotRadius)), color, name));
 }
 
@@ -149,7 +202,7 @@ bool Graph::show()
 	return opened;
 }
 
-void Graph::onSeriesAppend(const std::vector<float>& valuesX, const std::vector<float>& valuesY)
+void Graph::onSeriesAppend(const std::vector<float>& valuesX, const std::vector<float>& valuesY, const sf::Color& color, const std::string& name)
 {
 	auto [minitX, maxitX] = std::minmax_element(valuesX.begin(), valuesX.end());
 	auto [minitY, maxitY] = std::minmax_element(valuesY.begin(), valuesY.end());
@@ -172,6 +225,7 @@ void Graph::onSeriesAppend(const std::vector<float>& valuesX, const std::vector<
 			setBounds(newBegin, newEnd);
 	}
 	else setBounds(minvX, minvY, maxvX, maxvY);
+	legend->addItem(name, color);
 }
 
 void Graph::recomputeFrame()
@@ -209,14 +263,15 @@ bool Graph::processEvents()
 
 void Graph::render()
 {
-	window->clear();
+	window->clear(backgroundColor);
 
 	if (showGraph)
 		for (const auto& data : series)
 			data->draw(*window, *this);
 
-	if (showAxis)   axis->draw(*window);
 	if (showGrid)   grid->draw(*window);
 	if (showCursor) cursor->draw(*window);
+	if (showAxis)   axis->draw(*window);
+	if (showLegend) legend->draw(*window);
 	window->display();
 }
